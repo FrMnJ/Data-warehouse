@@ -1,7 +1,8 @@
 from dash import dcc, html
 
 class DecisionTab:
-    def render():
+    def render(self):
         return html.Div([
-            html.H3('Toma de decisiones'),
+            html.H2("Toma de decisiones",
+                    style={'margin': '20px'}),  
         ])
