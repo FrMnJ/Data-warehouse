@@ -10,7 +10,7 @@ carga_tab = None
 mineria_tab = None
 etl_tab = None
 decision_tab = None
-app = Dash()
+app = Dash(name="Data warehouse",suppress_callback_exceptions=True)
 
 # App layout
 app.layout = [
@@ -40,7 +40,7 @@ def render_tab(tab):
 
 # Run the app
 if __name__ == '__main__':
-    carga_tab = CargaTab()
+    carga_tab = CargaTab(app)
     mineria_tab = MineriaTab()
     etl_tab = ETLTab()
     decision_tab = DecisionTab()
