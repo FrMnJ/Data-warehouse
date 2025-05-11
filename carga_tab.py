@@ -87,10 +87,10 @@ class CargaTab:
                                  style_table={'overflowX': 'auto'},
                                  page_size=10,),
             html.Hr(),
-            dash_table.DataTable(df.to_dict('records'), 
+            dash_table.DataTable(df.head(10).to_dict('records'), 
                                  [{"name": i, "id": i} for i in df.columns],
                                  style_table={'overflowX': 'auto'},
-                                 page_size=10,), 
+                                ), 
             html.Hr(),
         ], style={"margin": "20px",})
 
