@@ -10,28 +10,31 @@ class CargaTab:
     
     def render(self):
         return html.Div([
-            html.H2("Carga de Datos",
-                    style={'margin': '20px'}),  
-            dcc.Upload(
-                id='upload-data',
-                children=html.Div([
-                    'Arrastra y suelta o ',
-                    html.A('Selecciona un archivo'),
-
-                ]),
-                style={
-                    'width': '100%',
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'dashed',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': '10px'
-                },
-                multiple=True
-            ),
-        html.Div(id='output-data-upload'),
+        html.H2("Carga de Datos",
+                style={'margin': '20px'}),  
+        dcc.Upload(
+            id='upload-data',
+            children=html.Div([
+                'Arrastra y suelta o ',
+                html.A('Selecciona un archivo'),
+            ]),
+            style={
+                'height': '60px',
+                'lineHeight': '60px',
+                'borderWidth': '1px',
+                'borderStyle': 'dashed',
+                'borderRadius': '5px',
+                'textAlign': 'center',
+                'margin': '30px'
+            },
+            multiple=True,
+        ),
+        dcc.Loading(
+            id="loading-output",
+            type="circle",
+            children=html.Div(id='output-data-upload'),
+            style={'margin': '30px'}
+        ),
     ])
 
     def describe_table(self, df):
@@ -70,7 +73,6 @@ class CargaTab:
             ])
 
         table_info = self.describe_table(df)
-        print(table_info)
 
         return html.Div([
             html.Hr(),
@@ -95,11 +97,12 @@ class CargaTab:
         ], style={"margin": "20px",})
 
     def register_callbacks(self):
-        @self.app.callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
+        @self.app.callback(
+            Output('output-data-upload', 'children'),
+            Input('upload-data', 'contents'),
+            State('upload-data', 'filename'),
         )
-        def update_output(list_contents, list_filenames):
+        def update_ouput(list_contents, list_filenames):
             if list_contents is not None:
                 children = [
                     self.parse_contents(content, name)
@@ -107,4 +110,3 @@ class CargaTab:
                 ]
                 return children
             return ""
-              
