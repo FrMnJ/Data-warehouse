@@ -22,6 +22,12 @@ class CargaTab:
         return html.Div([
         html.H2("Carga de Datos",
                 style={'margin': '20px'}),  
+        dcc.Store(id='stored-dataframes', data=[], storage_type='session'),
+        html.Button(
+            'Limpiar todo',
+            id='clear-button',
+            style={'margin': '20px'}
+        ),
         dcc.Upload(
             id='upload-data',
             children=html.Div([
@@ -42,7 +48,7 @@ class CargaTab:
         dcc.Loading(
             id="loading-output",
             type="circle",
-            children=html.Div(id='output-data-upload', children=children),
+            children=html.Div(id='output-data-upload'),
             style={'margin': '30px'}
         ),
     ])
@@ -106,23 +112,65 @@ class CargaTab:
         ], style={"margin": "20px",})
 
     def register_callbacks(self):
+        # Define un callback de Dash que actualiza dos salidas:
+        # 1. El contenido visualizado ('output-data-upload', 'children')
+        # 2. Los dataframes almacenados ('stored-dataframes', 'data')
         @self.app.callback(
             Output('output-data-upload', 'children'),
+            Output('stored-dataframes', 'data'),
             Input('upload-data', 'contents'),
             State('upload-data', 'filename'),
+            State('stored-dataframes', 'data'),
         )
-        def update_output(list_contents, list_filenames):
-            if list_contents is not None:
-                children = []
+        def update_output(list_contents, list_filenames, stored_data):
+            # Si no hay dataframes almacenados, inicializa la lista
+            if stored_data is None:
+                stored_data = []
+
+            new_data = []   # Para guardar los nuevos archivos subidos
+            children = []   # Para los elementos visuales a mostrar
+
+            # Si se subieron archivos y hay nombres de archivos
+            if list_contents and list_filenames:
+                # Procesa cada archivo subido
                 for content, name in zip(list_contents, list_filenames):
-                    df = self.parse_contents(content, name)
+                    df = self.parse_contents(content, name)  # Convierte el contenido en DataFrame
                     if isinstance(df, pd.DataFrame):
-                        DATAFRAMES[name] = df
-                        table = self.produce_table(df, name)
-                        children.append(table)
-                    elif isinstance(df, str):
-                        children.append(html.Div([
-                            df,
-                        ])) 
-                return children
-            return ""
+                        # Si el archivo no está ya almacenado, agrégalo a la lista de nuevos y agregalo a DATAFRAMES
+                        if not any(item == name for item in stored_data):
+                            DATAFRAMES[name] = df
+                            new_data.append(name)
+                        # Agrega la tabla visual al output
+                        children.append(self.produce_table(df, name))
+                    else:
+                        # Si hubo error al leer, muestra el mensaje de error
+                        children.append(html.Div([df]))
+
+                # Para cada archivo previamente almacenado que no esté en los nuevos, recupéralo y muéstralo
+                for item in stored_data:
+                    if not any(item == new for new in new_data):
+                        df = DATAFRAMES[item]
+                        children.append(self.produce_table(df, item))
+
+                # Combina los archivos previos y los nuevos para actualizar el almacenamiento
+                combined_data = stored_data + new_data
+                return children, combined_data
+            else:
+                # Si no hay archivos nuevos, solo muestra los almacenados
+                for item in stored_data:
+                    df =  DATAFRAMES.get(item, None)
+                    children.append(self.produce_table(df, item))
+                return children, stored_data
+        
+        @self.app.callback(
+            Output('stored-dataframes', 'data', allow_duplicate=True),
+            Input('clear-button', 'n_clicks'),
+            State('stored-dataframes', 'data'),
+            prevent_initial_call=True,
+        )
+        def clear_data(n_clicks, stored_data):
+            # Si se hace clic en el botón de limpiar, vacía la lista de dataframes
+            if n_clicks:
+                DATAFRAMES.clear()
+                return []
+            return stored_data
