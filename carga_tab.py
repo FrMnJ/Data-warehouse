@@ -4,6 +4,7 @@ from dash import dcc, html, dash_table, callback, Output, Input, State
 import pandas as pd
 import io
 import time
+import dash
 
 DATAFRAMES = {}
 
@@ -164,13 +165,19 @@ class CargaTab:
         
         @self.app.callback(
             Output('stored-dataframes', 'data', allow_duplicate=True),
+            Output('output-data-upload', 'children', allow_duplicate=True),
             Input('clear-button', 'n_clicks'),
-            State('stored-dataframes', 'data'),
             prevent_initial_call=True,
         )
-        def clear_data(n_clicks, stored_data):
-            # Si se hace clic en el botón de limpiar, vacía la lista de dataframes
+        def clear_data(n_clicks):
+            # Verifica si el botón de "Limpiar todo" fue presionado al menos una vez
             if n_clicks:
+                # Limpia el diccionario global donde se almacenan los DataFrames
                 DATAFRAMES.clear()
-                return []
-            return stored_data
+                # Retorna una lista vacía para:
+                # 1. Borrar los nombres de archivos en el componente 'stored-dataframes'
+                # 2. Borrar visualmente las tablas del componente 'output-data-upload'
+                return [], []
+            
+            # Si no se ha hecho clic, no actualiza nada (deja los datos y la visualización como están)
+            return dash.no_update, dash.no_update
