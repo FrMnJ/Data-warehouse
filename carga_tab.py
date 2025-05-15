@@ -1,4 +1,5 @@
 import base64
+from typing import Tuple
 from dash import dcc, html, dash_table, callback, Output, Input, State
 import pandas as pd
 import io
@@ -10,6 +11,7 @@ class CargaTab:
     
     def render(self):
         return html.Div([
+        dcc.Store(id='stored-dataframes', data=[], storage_type='memory'),
         html.H2("Carga de Datos",
                 style={'margin': '20px'}),  
         dcc.Upload(
@@ -37,7 +39,7 @@ class CargaTab:
         ),
     ])
 
-    def describe_table(self, df):
+    def describe_table(self, df) -> dict:
         table_info = []
         for column in df.columns:
             missing_values = int(df[column].isnull().sum())
@@ -51,29 +53,28 @@ class CargaTab:
             table_info.append(column_info)
         return table_info
 
-    def parse_contents(self, contents, filename):
+    def parse_contents(self, contents, filename)-> pd.DataFrame | str:
         content_type, content_string = contents.split(',')
         decoded = base64.b64decode(content_string)
         try:
             if 'csv' in filename:
                 df = pd.read_csv(
                     io.StringIO(decoded.decode('utf-8')))
+                return df
             elif 'xlsx' in filename:
                 df = pd.read_excel(io.BytesIO(decoded))
+                return df
             elif 'json' in filename:
                 df = pd.read_json(io.StringIO(decoded.decode('utf-8')))
+                return df
             else:
-                return html.Div([
-                    'El archivo no es un csv, xlsx o json',
-                ])
+                return 'Tipo de archivo no soportado'
         except Exception as e:
             print(e)
-            return html.Div([
-                'Hubo un error al cargar el archivo',
-            ])
+            return 'Error al procesar el archivo'
 
+    def produce_table(self, df, filename) -> Tuple[html.Div]:
         table_info = self.describe_table(df)
-
         return html.Div([
             html.Hr(),
             html.H3(f"Nombre del archivo: {filename}"),
@@ -99,14 +100,23 @@ class CargaTab:
     def register_callbacks(self):
         @self.app.callback(
             Output('output-data-upload', 'children'),
+            Output('stored-dataframes', 'data'),
             Input('upload-data', 'contents'),
             State('upload-data', 'filename'),
         )
-        def update_ouput(list_contents, list_filenames):
+        def update_output(list_contents, list_filenames):
             if list_contents is not None:
-                children = [
-                    self.parse_contents(content, name)
-                    for content, name in zip(list_contents, list_filenames)
-                ]
-                return children
-            return ""
+                children = []
+                dataframes = []
+                for content, name in zip(list_contents, list_filenames):
+                    df = self.parse_contents(content, name)
+                    if isinstance(df, pd.DataFrame):
+                        dataframes.append(df.to_dict('records'))
+                        table = self.produce_table(df, name)
+                        children.append(table)
+                    elif isinstance(df, str):
+                        children.append(html.Div([
+                            df,
+                        ])) 
+                return children, dataframes
+            return "", [],
