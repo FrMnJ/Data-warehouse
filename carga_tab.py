@@ -27,7 +27,14 @@ class CargaTab:
         html.Button(
             'Limpiar todo',
             id='clear-button',
-            style={'margin': '20px'}
+            style={'margin': '20px',
+                    'backgroundColor': "#606060",
+                    'color': 'white',
+                    'border': 'none',
+                    'borderRadius': '5px',
+                    'padding': '10px 20px',
+                    'cursor': 'pointer',
+                    'fontSize': '14px'}
         ),
         dcc.Upload(
             id='upload-data',
@@ -42,7 +49,8 @@ class CargaTab:
                 'borderStyle': 'dashed',
                 'borderRadius': '5px',
                 'textAlign': 'center',
-                'margin': '30px'
+                'margin': '30px',
+                'cursor': 'pointer',
             },
             multiple=True,
         ),
