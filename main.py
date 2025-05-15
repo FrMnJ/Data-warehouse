@@ -17,6 +17,7 @@ app.layout = [
     dcc.Tabs(id='tabs', value='carga', children=[
             dcc.Tab(label='Carga de datos', value='carga'),
             dcc.Tab(label='ETL', value='etl'),
+            dcc.Tab(label='Análisis exploratorio', value='exploratory'),
             dcc.Tab(label='Minería de datos', value='mineria'),
             dcc.Tab(label='Toma de decisiones', value='decision'),
         ],
@@ -42,6 +43,6 @@ def render_tab(tab):
 if __name__ == '__main__':
     carga_tab = CargaTab(app)
     mineria_tab = MineriaTab()
-    etl_tab = ETLTab()
+    etl_tab = ETLTab(app)
     decision_tab = DecisionTab()
     app.run(debug=True)

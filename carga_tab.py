@@ -1,6 +1,7 @@
 import base64
 from typing import Tuple
 from dash import dcc, html, dash_table, callback, Output, Input, State
+from etl_tab import PROCESS_DATASET, ETLTab
 import pandas as pd
 import io
 import time
@@ -154,6 +155,14 @@ class CargaTab:
 
                 # Combina los archivos previos y los nuevos para actualizar el almacenamiento
                 combined_data = stored_data + new_data
+                # Combina DATAFRAMES
+                # Genera contenido ETL y DATAFRAME procesado
+                full_df = pd.concat([DATAFRAMES[item] for item in combined_data], ignore_index=True)
+                processed_df, etl_output = ETLTab.process_dataframe(full_df)
+                # Almacena el dataframe procesado
+                DATAFRAMES['processed_data'] = processed_df
+                # Almacena el resultado del ETL
+                PROCESS_DATASET['etl_output'] = etl_output
                 return children, combined_data
             else:
                 # Si no hay archivos nuevos, solo muestra los almacenados
@@ -172,5 +181,6 @@ class CargaTab:
             # Si se hace clic en el botón de limpiar, vacía la lista de dataframes
             if n_clicks:
                 DATAFRAMES.clear()
+                PROCESS_DATASET.clear()
                 return []
             return stored_data
