@@ -71,6 +71,7 @@ class ETLTab:
             ),
             html.Hr(),
         ])
+        process_elements.append(element)
 
         # En la columna 'lead_time', bajamos los valores que eran demasiado altos al nivel del promedio.
         mean_lead_time = int(copy_df['lead_time'].mean())
@@ -163,6 +164,7 @@ class ETLTab:
                 ),
                 html.Hr(),
             ])
+            process_elements.append(element)
 
         # Eliminar filas previous_bookings_not_canceled mayores a 1.5 x el rango intercuartil y menores a 0
         if 'previous_bookings_not_canceled' in copy_df.columns:
@@ -291,8 +293,10 @@ class ETLTab:
         # Eliminar reservation_status_date con frecuencia menor a la media
         if 'reservation_status_date' in copy_df.columns:
             reservation_counts = copy_df['reservation_status_date'].value_counts()
-            len_before = len(copy_df)   
-            copy_df = copy_df[copy_df['reservation_status_date'].isin(copy_df[reservation_counts >= reservation_counts.mean()].index)]            
+            mean_count = reservation_counts.mean()
+            valid_dates = reservation_counts[reservation_counts >= mean_count].index
+            len_before = len(copy_df)
+            copy_df = copy_df[copy_df['reservation_status_date'].isin(valid_dates)]
             element = html.Div([
                 html.H3("Eliminación de reservation_status_date con frecuencia menor a la media"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas"),
@@ -307,7 +311,6 @@ class ETLTab:
             ])
             process_elements.append(element)
             # Cambiamos las fechas a formato de fecha real, y luego ordenamos el dataset de más antiguo a más reciente.
-            # Así es más fácil analizar por tiempo y asegurarse que todo esté en orden.
             copy_df['reservation_status_date'] = copy_df['reservation_status_date'].astype('datetime64[ns]', errors='ignore')
             copy_df = copy_df[copy_df['reservation_status_date'].notna()]
             copy_df = copy_df.sort_values(by='reservation_status_date')
@@ -330,7 +333,7 @@ class ETLTab:
             copy_df['required_car_parking_spaces'] = copy_df['required_car_parking_spaces'].fillna(0)
             element = html.Div([
                 html.H3("Reemplazo de valores nulos en required_car_parking_spaces con 0"),
-                html.P(f"Se reemplazaron {rows_to_fill} filas"),
+                html.P(f"Se reemplazaron {len(rows_to_fill)} filas"),
                 dash_table.DataTable(
                     data=copy_df.to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],

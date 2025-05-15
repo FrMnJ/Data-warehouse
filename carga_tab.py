@@ -14,12 +14,6 @@ class CargaTab:
         self.register_callbacks()
     
     def render(self):
-        children = []
-        if len(DATAFRAMES) > 0:
-            for name, df in DATAFRAMES.items():
-                table = self.produce_table(df, name)
-                children.append(table)
-
         return html.Div([
         html.H2("Carga de Datos",
                 style={'margin': '20px'}),  
