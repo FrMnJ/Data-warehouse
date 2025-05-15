@@ -127,6 +127,6 @@ def render_tab(tab):
 if __name__ == '__main__':
     carga_tab = CargaTab(app)
     mineria_tab = MineriaTab()
-    etl_tab = ETLTab()
+    etl_tab = ETLTab(app)
     decision_tab = DecisionTab()
     app.run(debug=True)

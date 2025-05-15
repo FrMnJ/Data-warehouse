@@ -1,6 +1,7 @@
 import base64
 from typing import Tuple
 from dash import dcc, html, dash_table, callback, Output, Input, State
+from etl_tab import PROCESS_DATASET, ETLTab
 import pandas as pd
 import io
 import time
@@ -14,12 +15,6 @@ class CargaTab:
         self.register_callbacks()
     
     def render(self):
-        children = []
-        if len(DATAFRAMES) > 0:
-            for name, df in DATAFRAMES.items():
-                table = self.produce_table(df, name)
-                children.append(table)
-
         return html.Div([
         html.H2("Carga de Datos",
                 style={'margin': '20px'}),  
@@ -163,6 +158,14 @@ class CargaTab:
 
                 # Combina los archivos previos y los nuevos para actualizar el almacenamiento
                 combined_data = stored_data + new_data
+                # Combina DATAFRAMES
+                # Genera contenido ETL y DATAFRAME procesado
+                full_df = pd.concat([DATAFRAMES[item] for item in combined_data], ignore_index=True)
+                processed_df, etl_output = ETLTab.process_dataframe(full_df)
+                # Almacena el dataframe procesado
+                DATAFRAMES['processed_data'] = processed_df
+                # Almacena el resultado del ETL
+                PROCESS_DATASET['etl_output'] = etl_output
                 return children, combined_data
             else:
                 # Si no hay archivos nuevos, solo muestra los almacenados
@@ -182,10 +185,10 @@ class CargaTab:
             if n_clicks:
                 # Limpia el diccionario global donde se almacenan los DataFrames
                 DATAFRAMES.clear()
+                PROCESS_DATASET.clear()
                 # Retorna una lista vacía para:
                 # 1. Borrar los nombres de archivos en el componente 'stored-dataframes'
                 # 2. Borrar visualmente las tablas del componente 'output-data-upload'
                 return [], []
-            
             # Si no se ha hecho clic, no actualiza nada (deja los datos y la visualización como están)
             return dash.no_update, dash.no_update
