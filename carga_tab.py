@@ -3,6 +3,9 @@ from typing import Tuple
 from dash import dcc, html, dash_table, callback, Output, Input, State
 import pandas as pd
 import io
+import time
+
+DATAFRAMES = {}
 
 class CargaTab:
     def __init__(self, app):
@@ -10,8 +13,13 @@ class CargaTab:
         self.register_callbacks()
     
     def render(self):
+        children = []
+        if len(DATAFRAMES) > 0:
+            for name, df in DATAFRAMES.items():
+                table = self.produce_table(df, name)
+                children.append(table)
+
         return html.Div([
-        dcc.Store(id='stored-dataframes', data=[], storage_type='memory'),
         html.H2("Carga de Datos",
                 style={'margin': '20px'}),  
         dcc.Upload(
@@ -34,7 +42,7 @@ class CargaTab:
         dcc.Loading(
             id="loading-output",
             type="circle",
-            children=html.Div(id='output-data-upload'),
+            children=html.Div(id='output-data-upload', children=children),
             style={'margin': '30px'}
         ),
     ])
@@ -100,23 +108,21 @@ class CargaTab:
     def register_callbacks(self):
         @self.app.callback(
             Output('output-data-upload', 'children'),
-            Output('stored-dataframes', 'data'),
             Input('upload-data', 'contents'),
             State('upload-data', 'filename'),
         )
         def update_output(list_contents, list_filenames):
             if list_contents is not None:
                 children = []
-                dataframes = []
                 for content, name in zip(list_contents, list_filenames):
                     df = self.parse_contents(content, name)
                     if isinstance(df, pd.DataFrame):
-                        dataframes.append(df.to_dict('records'))
+                        DATAFRAMES[name] = df
                         table = self.produce_table(df, name)
                         children.append(table)
                     elif isinstance(df, str):
                         children.append(html.Div([
                             df,
                         ])) 
-                return children, dataframes
-            return "", [],
+                return children
+            return ""
