@@ -1,13 +1,9 @@
-import base64
 from typing import Tuple
 from dash import dcc, html, dash_table, callback, Output, Input, State
-from etl_tab import PROCESS_DATASET, ETLTab
 import pandas as pd
+import base64
 import io
-import time
-import dash
-
-DATAFRAMES = {}
+from info_compartida import DATAFRAMES, PROCESS_DATASET
 
 class CargaTab:
     def __init__(self, app):
@@ -60,36 +56,37 @@ class CargaTab:
     def describe_table(self, df) -> dict:
         table_info = []
         for column in df.columns:
-            missing_values = int(df[column].isnull().sum())
-            column_info = {
+            column_type = str(df[column].dtype)
+            unique_values = df[column].nunique()
+            missing_values = df[column].isna().sum()
+            percent_missing = round((missing_values / len(df)) * 100, 2)
+            
+            table_info.append({
                 'column_name': column,
-                'type': str(df[column].dtype),
-                'unique_values': int(df[column].nunique()),
+                'type': column_type,
+                'unique_values': unique_values,
                 'missing_values': missing_values,
-                'percent_missing': round(missing_values / len(df) * 100, 2),
-            }
-            table_info.append(column_info)
+                'percent_missing': f"{percent_missing}%"
+            })
+            
         return table_info
 
-    def parse_contents(self, contents, filename)-> pd.DataFrame | str:
+    def parse_contents(self, contents, filename) -> pd.DataFrame | str:
         content_type, content_string = contents.split(',')
         decoded = base64.b64decode(content_string)
         try:
             if 'csv' in filename:
-                df = pd.read_csv(
-                    io.StringIO(decoded.decode('utf-8')))
-                return df
-            elif 'xlsx' in filename:
+                df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+            elif 'xls' in filename:
                 df = pd.read_excel(io.BytesIO(decoded))
-                return df
-            elif 'json' in filename:
+            elif 'json' in filename or 'js' in filename:
                 df = pd.read_json(io.StringIO(decoded.decode('utf-8')))
-                return df
             else:
-                return 'Tipo de archivo no soportado'
+                return f"El formato del archivo {filename} no es compatible"
+                
+            return df
         except Exception as e:
-            print(e)
-            return 'Error al procesar el archivo'
+            return f"Hubo un error procesando el archivo {filename}: {e}"
 
     def produce_table(self, df, filename) -> Tuple[html.Div]:
         table_info = self.describe_table(df)
@@ -138,42 +135,34 @@ class CargaTab:
             if list_contents and list_filenames:
                 # Procesa cada archivo subido
                 for content, name in zip(list_contents, list_filenames):
-                    df = self.parse_contents(content, name)  # Convierte el contenido en DataFrame
+                    df = self.parse_contents(content, name) # Convierte el contenido en DataFrame
                     if isinstance(df, pd.DataFrame):
-                        # Si el archivo no está ya almacenado, agrégalo a la lista de nuevos y agregalo a DATAFRAMES
-                        if not any(item == name for item in stored_data):
-                            DATAFRAMES[name] = df
+                        # Guardar en el DATAFRAMES compartido
+                        DATAFRAMES[name] = df
+                        print(f"Guardando DataFrame '{name}' en DATAFRAMES")
+                        print(f"Tamaño del DataFrame: {df.shape}")
+                        
+                        if name not in stored_data:
                             new_data.append(name)
-                        # Agrega la tabla visual al output
                         children.append(self.produce_table(df, name))
                     else:
-                        # Si hubo error al leer, muestra el mensaje de error
-                        children.append(html.Div([df]))
+                        children.append(html.Div([html.P(df)]))
 
-                # Para cada archivo previamente almacenado que no esté en los nuevos, recupéralo y muéstralo
-                for item in stored_data:
-                    if not any(item == new for new in new_data):
-                        df = DATAFRAMES[item]
-                        children.append(self.produce_table(df, item))
-
-                # Combina los archivos previos y los nuevos para actualizar el almacenamiento
-                combined_data = stored_data + new_data
-                # Combina DATAFRAMES
-                # Genera contenido ETL y DATAFRAME procesado
-                full_df = pd.concat([DATAFRAMES[item] for item in combined_data], ignore_index=True)
-                processed_df, etl_output = ETLTab.process_dataframe(full_df)
-                # Almacena el dataframe procesado
-                DATAFRAMES['processed_data'] = processed_df
-                # Almacena el resultado del ETL
-                PROCESS_DATASET['etl_output'] = etl_output
-                return children, combined_data
-            else:
-                # Si no hay archivos nuevos, solo muestra los almacenados
-                for item in stored_data:
-                    df =  DATAFRAMES.get(item, None)
+            # Para cada archivo previamente almacenado que no esté en los nuevos, recupéralo y muéstralo
+            for item in stored_data:
+                if item not in new_data and item in DATAFRAMES:
+                    df = DATAFRAMES[item]
                     children.append(self.produce_table(df, item))
-                return children, stored_data
-        
+
+           # Combina los archivos previos y los nuevos para actualizar el almacenamiento
+            combined_data = list(set(stored_data + new_data))
+            
+            # Imprimir información de diagnóstico
+            print(f"DATAFRAMES contiene: {list(DATAFRAMES.keys())}")
+            print(f"Número total de DataFrames: {len(DATAFRAMES)}")
+            
+            return children, combined_data
+
         @self.app.callback(
             Output('stored-dataframes', 'data', allow_duplicate=True),
             Output('output-data-upload', 'children', allow_duplicate=True),
@@ -181,14 +170,7 @@ class CargaTab:
             prevent_initial_call=True,
         )
         def clear_data(n_clicks):
-            # Verifica si el botón de "Limpiar todo" fue presionado al menos una vez
-            if n_clicks:
-                # Limpia el diccionario global donde se almacenan los DataFrames
-                DATAFRAMES.clear()
-                PROCESS_DATASET.clear()
-                # Retorna una lista vacía para:
-                # 1. Borrar los nombres de archivos en el componente 'stored-dataframes'
-                # 2. Borrar visualmente las tablas del componente 'output-data-upload'
-                return [], []
-            # Si no se ha hecho clic, no actualiza nada (deja los datos y la visualización como están)
-            return dash.no_update, dash.no_update
+            # Limpiar los datos globales
+            DATAFRAMES.clear()
+            print("Limpiando todos los DataFrames")
+            return [], []
