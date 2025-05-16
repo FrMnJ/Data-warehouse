@@ -3,6 +3,7 @@ from dash import dcc, html, dash_table, callback, Output, Input, State
 import pandas as pd
 import base64
 import io
+import dash
 from info_compartida import DATAFRAMES, PROCESS_DATASET
 
 class CargaTab:
@@ -11,47 +12,58 @@ class CargaTab:
         self.register_callbacks()
     
     def render(self):
+        # Verificar si hay resultados almacenados para mostrar
+        uploaded_files_output = PROCESS_DATASET.get('uploaded_files_output', [])
+        
         return html.Div([
-        html.H2("Carga de Datos",
-                style={'margin': '20px'}),  
-        dcc.Store(id='stored-dataframes', data=[], storage_type='session'),
-        html.Button(
-            'Limpiar todo',
-            id='clear-button',
-            style={'margin': '20px',
-                    'backgroundColor': "#606060",
-                    'color': 'white',
-                    'border': 'none',
+            html.H2("Carga de Datos", style={'margin': '20px'}),  
+            
+            # Mantenemos el dcc.Store para mantener compatibilidad
+            dcc.Store(id='stored-dataframes', data=list(DATAFRAMES.keys()), storage_type='session'),
+            
+            html.Button(
+                'Limpiar todo',
+                id='clear-button',
+                style={'margin': '20px',
+                        'backgroundColor': "#606060",
+                        'color': 'white',
+                        'border': 'none',
+                        'borderRadius': '5px',
+                        'padding': '10px 20px',
+                        'cursor': 'pointer',
+                        'fontSize': '14px'}
+            ),
+            
+            dcc.Upload(
+                id='upload-data',
+                children=html.Div([
+                    'Arrastra y suelta o ',
+                    html.A('Selecciona un archivo'),
+                ]),
+                style={
+                    'height': '60px',
+                    'lineHeight': '60px',
+                    'borderWidth': '1px',
+                    'borderStyle': 'dashed',
                     'borderRadius': '5px',
-                    'padding': '10px 20px',
+                    'textAlign': 'center',
+                    'margin': '30px',
                     'cursor': 'pointer',
-                    'fontSize': '14px'}
-        ),
-        dcc.Upload(
-            id='upload-data',
-            children=html.Div([
-                'Arrastra y suelta o ',
-                html.A('Selecciona un archivo'),
-            ]),
-            style={
-                'height': '60px',
-                'lineHeight': '60px',
-                'borderWidth': '1px',
-                'borderStyle': 'dashed',
-                'borderRadius': '5px',
-                'textAlign': 'center',
-                'margin': '30px',
-                'cursor': 'pointer',
-            },
-            multiple=True,
-        ),
-        dcc.Loading(
-            id="loading-output",
-            type="circle",
-            children=html.Div(id='output-data-upload'),
-            style={'margin': '30px'}
-        ),
-    ])
+                },
+                multiple=True,
+            ),
+            
+            dcc.Loading(
+                id="loading-output",
+                type="circle",
+                # Mostramos los resultados almacenados si existen
+                children=html.Div(
+                    id='output-data-upload', 
+                    children=uploaded_files_output
+                ),
+                style={'margin': '30px'}
+            ),
+        ])
 
     def describe_table(self, df) -> dict:
         table_info = []
@@ -113,9 +125,6 @@ class CargaTab:
         ], style={"margin": "20px",})
 
     def register_callbacks(self):
-        # Define un callback de Dash que actualiza dos salidas:
-        # 1. El contenido visualizado ('output-data-upload', 'children')
-        # 2. Los dataframes almacenados ('stored-dataframes', 'data')
         @self.app.callback(
             Output('output-data-upload', 'children'),
             Output('stored-dataframes', 'data'),
@@ -154,8 +163,11 @@ class CargaTab:
                     df = DATAFRAMES[item]
                     children.append(self.produce_table(df, item))
 
-           # Combina los archivos previos y los nuevos para actualizar el almacenamiento
+            # Combina los archivos previos y los nuevos para actualizar el almacenamiento
             combined_data = list(set(stored_data + new_data))
+            
+            # Almacena la visualización en el diccionario compartido para persistencia
+            PROCESS_DATASET['uploaded_files_output'] = children
             
             # Imprimir información de diagnóstico
             print(f"DATAFRAMES contiene: {list(DATAFRAMES.keys())}")
@@ -170,7 +182,23 @@ class CargaTab:
             prevent_initial_call=True,
         )
         def clear_data(n_clicks):
-            # Limpiar los datos globales
-            DATAFRAMES.clear()
-            print("Limpiando todos los DataFrames")
-            return [], []
+            if n_clicks:
+                # Limpiar los datos globales
+                DATAFRAMES.clear()
+                
+                # Limpiar también la visualización almacenada
+                if 'uploaded_files_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['uploaded_files_output']
+                
+                # Limpiar otros datos relacionados en PROCESS_DATASET si es necesario
+                if 'etl_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['etl_output']
+                if 'save_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['save_output']
+                if 'mineria_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['mineria_output']
+                
+                print("Limpiando todos los DataFrames y resultados almacenados")
+                return [], []
+            
+            return dash.no_update, dash.no_update
