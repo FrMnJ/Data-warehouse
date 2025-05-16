@@ -1,6 +1,7 @@
 from typing import Tuple
 import os
 import pandas as pd
+import dash
 from dash import Input, dcc, html, callback, State, dash_table, Output
 from info_compartida import DATAFRAMES, PROCESS_DATASET
 from sqlalchemy import create_engine
@@ -17,6 +18,10 @@ class ETLTab:
         self.register_callbacks()
 
     def render(self):
+        # Verificar si hay resultados almacenados para mostrar
+        etl_output = PROCESS_DATASET.get('etl_output', [])
+        save_output = PROCESS_DATASET.get('save_output', html.Div())
+        
         return html.Div([
             html.H2("ETL", style={'margin': '20px'}),
             
@@ -85,7 +90,7 @@ class ETLTab:
                 ]),
             ], style={'margin': '20px', 'padding': '20px', 'backgroundColor': '#f9f9f9', 'borderRadius': '5px'}),
             
-            # Botón de inicio del proceso ETL (ahora después de las opciones de guardado)
+            # Botón de inicio del proceso ETL
             html.Button(
                 'Iniciar Proceso ETL y Guardar',
                 id='start-etl-button',
@@ -99,17 +104,32 @@ class ETLTab:
                     'fontSize': '14px'}
             ),
             
-            # Indicador de carga y resultados del ETL
+            # Botón para limpiar resultados del ETL
+            html.Button(
+                'Limpiar resultados',
+                id='clear-etl-button',
+                style={'margin': '20px',
+                    'backgroundColor': "#606060",
+                    'color': 'white',
+                    'border': 'none',
+                    'borderRadius': '5px',
+                    'padding': '10px 20px',
+                    'cursor': 'pointer',
+                    'fontSize': '14px',
+                    'marginLeft': '10px'}
+            ),
+            
+            # Indicador de carga y resultados del ETL - mostrar resultados almacenados si existen
             dcc.Loading(
                 id="loading-etl",
                 type="circle",
                 children=html.Div(id='etl-output',
-                                children=[html.P("", style={'margin': '20px'})]),
+                                children=etl_output if etl_output else [html.P("", style={'margin': '20px'})]),
                 style={'margin': '20px'}
             ),
             
-            # Área para mostrar resultados del guardado
-            html.Div(id='save-output', children=[], style={'margin': '20px', 'padding': '15px'}),
+            # Área para mostrar resultados del guardado - mostrar resultados almacenados si existen
+            html.Div(id='save-output', children=save_output, style={'margin': '20px', 'padding': '15px'}),
         ])
 
     def register_callbacks(self):
@@ -133,22 +153,21 @@ class ETLTab:
             if n_clicks is None:
                 return [html.P("")], []
             
-            # 1. PARTE ETL - Código existente
-            # Imprimir información de diagnóstico
-            print(f"ETL - DATAFRAMES contiene: {list(DATAFRAMES.keys())}")
-            print(f"ETL - Número total de DataFrames: {len(DATAFRAMES)}")
+            # Verificar que haya datos cargados
+            if not DATAFRAMES:
+                return [html.P("No hay datos cargados. Por favor, cargue al menos un conjunto de datos en la pestaña 'Carga de datos'.", 
+                            style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'})], []
             
-            # Recolectar todos los DataFrames excepto el processed_data
+            # Procesar los DataFrames disponibles
             dfs_to_concat = []
+            print(f"Procesando {len(DATAFRAMES)} DataFrames")
             for name, df in DATAFRAMES.items():
-                if isinstance(df, pd.DataFrame) and name != 'processed_data':
-                    print(f"Incluyendo DataFrame '{name}' con forma {df.shape}")
+                if isinstance(df, pd.DataFrame):
                     dfs_to_concat.append(df)
             
             if not dfs_to_concat:
-                print("No se encontraron datos para procesar")
-                return [html.P("No hay datos para procesar. Por favor, cargue archivos en la pestaña 'Carga de Datos'.",
-                            style={'margin': '20px', 'color': 'red'})], []
+                return [html.P("No se encontraron DataFrames válidos para procesar.", 
+                            style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'})], []
             
             try:
                 print(f"Concatenando {len(dfs_to_concat)} DataFrames")
@@ -156,48 +175,62 @@ class ETLTab:
                 print(f"DataFrame concatenado con forma: {full_df.shape}")
                 processed_df, etl_output = self.process_dataframe(full_df)
                 
-                # Almacenar resultados
+                # Almacenar resultados en estado compartido
                 print(f"Almacenando DataFrame procesado con forma: {processed_df.shape}")
                 DATAFRAMES['processed_data'] = processed_df
                 PROCESS_DATASET['etl_output'] = etl_output
                 
-                # Mostrar resumen al final para confirmar que el proceso fue exitoso
+                # Crear resumen para mostrar
                 summary = html.Div([
-                    html.H3("Proceso ETL completado con éxito", style={'color': 'green', 'marginTop': '20px'}),
-                    html.P(f"Registros originales: {len(full_df)}"),
-                    html.P(f"Registros después del procesamiento: {len(processed_df)}"),
-                    html.P(f"Columnas originales: {len(full_df.columns)}"),
-                    html.P(f"Columnas después del procesamiento: {len(processed_df.columns)}"),
-                    html.Hr(),
-                    html.H4("Primeras 5 filas del DataFrame procesado:"),
-                    dash_table.DataTable(
-                        data=processed_df.head(5).to_dict('records'),
-                        columns=[{"name": i, "id": i} for i in processed_df.columns],
-                        page_size=5,
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
-                    ),
+                    html.H3("✅ Procesamiento ETL completado", style={'color': 'green', 'fontWeight': 'bold'}),
+                    html.P(f"Se procesaron {len(full_df)} registros y se obtuvieron {len(processed_df)} registros limpios."),
+                    html.P(f"Se concatenaron {len(dfs_to_concat)} conjuntos de datos."),
+                    html.Hr()
                 ])
                 
-                # 2. PARTE DE GUARDADO - Usando el formato seleccionado
-                save_result = []
+                # Guardar los resultados según el formato seleccionado
+                success = False
+                result = ""
+                save_result = None
+                
                 try:
                     if export_format == 'csv':
-                        filepath = f"{filename}.csv"
-                        success, result = self.save_to_file(processed_df, filepath, 'csv')
+                        full_path = f"{filename}.csv"
+                        processed_df.to_csv(full_path, index=False)
+                        success = True
+                        result = os.path.abspath(full_path)
                     
                     elif export_format == 'xlsx':
-                        filepath = f"{filename}.xlsx"
-                        success, result = self.save_to_file(processed_df, filepath, 'xlsx')
+                        full_path = f"{filename}.xlsx"
+                        processed_df.to_excel(full_path, index=False)
+                        success = True
+                        result = os.path.abspath(full_path)
                     
                     elif export_format == 'json':
-                        filepath = f"{filename}.json"
-                        success, result = self.save_to_file(processed_df, filepath, 'json')
+                        full_path = f"{filename}.json"
+                        processed_df.to_json(full_path, orient='records')
+                        success = True
+                        result = os.path.abspath(full_path)
                     
                     elif export_format == 'postgres':
-                        success, result = self.save_to_postgres(
-                            processed_df, pg_host, pg_port, pg_db, pg_schema, pg_table, pg_user, pg_password
+                        # Configurar la conexión a PostgreSQL
+                        connection_string = f"postgresql://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_db}"
+                        engine = create_engine(connection_string)
+                        
+                        # Crear tabla y guardar datos
+                        table_name = pg_table
+                        schema_name = pg_schema
+                        
+                        processed_df.to_sql(
+                            name=table_name, 
+                            schema=schema_name,
+                            con=engine, 
+                            if_exists='replace',
+                            index=False
                         )
+                        
+                        success = True
+                        result = f"{pg_host}:{pg_port}/{pg_db}.{pg_schema}.{pg_table}"
                     
                     if success:
                         save_result = html.Div([
@@ -209,6 +242,9 @@ class ETLTab:
                             html.H3("❌ Error al guardar", style={'color': 'red', 'fontWeight': 'bold'}),
                             html.P(f"Detalle: {result}")
                         ])
+                    
+                    # Almacenar resultado del guardado en estado compartido
+                    PROCESS_DATASET['save_output'] = save_result
                         
                 except Exception as e:
                     import traceback
@@ -217,16 +253,39 @@ class ETLTab:
                         html.H3("❌ Error inesperado al guardar", style={'color': 'red', 'fontWeight': 'bold'}),
                         html.P(f"Detalle: {str(e)}")
                     ])
+                    PROCESS_DATASET['save_output'] = save_result
                 
-                # Devolver tanto el resultado del ETL como el del guardado
+                # Retornar tanto los resultados del ETL como los resultados del guardado
                 return [summary] + etl_output, save_result
                     
             except Exception as e:
-                print(f"Error en ETL: {str(e)}")
                 import traceback
-                traceback.print_exc()
-                return [html.P(f"Error durante el procesamiento ETL: {str(e)}",
-                            style={'margin': '20px', 'color': 'red'})], []
+                print(traceback.format_exc())
+                return [html.Div([
+                    html.H3("❌ Error durante el procesamiento ETL", style={'color': 'red', 'fontWeight': 'bold'}),
+                    html.P(f"Detalle: {str(e)}")
+                ])], []
+
+        # Añadir un callback para limpiar los resultados del ETL
+        @self.app.callback(
+            Output('etl-output', 'children', allow_duplicate=True),
+            Output('save-output', 'children', allow_duplicate=True),
+            Input('clear-etl-button', 'n_clicks'),
+            prevent_initial_call=True
+        )
+        def clear_etl_results(n_clicks):
+            if n_clicks:
+                # Limpiar resultados ETL del estado compartido
+                if 'etl_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['etl_output']
+                if 'save_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['save_output']
+                if 'processed_data' in DATAFRAMES:
+                    del DATAFRAMES['processed_data']
+                
+                return [html.P("", style={'margin': '20px'})], []
+            
+            return dash.no_update, dash.no_update
         
         # Mantener este callback para mostrar/ocultar configuración de PostgreSQL
         @self.app.callback(
@@ -234,13 +293,11 @@ class ETLTab:
             Output('file-config', 'style'),
             Input('export-format', 'value')
         )
-        def toggle_postgres_config(format_value):
-            if format_value == 'postgres':
-                return {'display': 'block', 'border': '1px solid #ddd', 'padding': '15px', 
-                        'borderRadius': '5px', 'marginTop': '10px'}, {'display': 'none'}
+        def toggle_postgres_config(export_format):
+            if export_format == 'postgres':
+                return {'display': 'block', 'border': '1px solid #ddd', 'padding': '15px', 'borderRadius': '5px', 'marginTop': '10px'}, {'display': 'none'}
             else:
-                return {'display': 'none'}, {'display': 'block'}
-            
+                return {'display': 'none'}, {'display': 'block'}           
 
 
     def process_dataframe(self, df) -> Tuple[pd.DataFrame, list]:
