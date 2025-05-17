@@ -7,10 +7,10 @@ from info_compartida import DATAFRAMES, PROCESS_DATASET
 from sqlalchemy import create_engine
 import psycopg2
 from psycopg2 import sql
-import pandas as pd
-import os
 import json
-            
+import io
+from io import StringIO
+
 
 class ETLTab:
     def __init__(self, app):
@@ -21,14 +21,44 @@ class ETLTab:
         # Verificar si hay resultados almacenados para mostrar
         etl_output = PROCESS_DATASET.get('etl_output', [])
         save_output = PROCESS_DATASET.get('save_output', html.Div())
+        export_options_div = PROCESS_DATASET.get('export_options_div', {'display': 'none'})
         
         return html.Div([
             html.H2("ETL", style={'margin': '20px'}),
             
-            # Sección para opciones de guardado ANTES del botón de iniciar ETL
+            # Botón de inicio del proceso ETL (solo procesamiento)
+            html.Button(
+                'Iniciar Proceso ETL',
+                id='start-etl-button',
+                style={'margin': '20px',
+                    'backgroundColor': "#007bff",
+                    'color': 'white',
+                    'border': 'none',
+                    'borderRadius': '5px',
+                    'padding': '10px 20px',
+                    'cursor': 'pointer',
+                    'fontSize': '14px'}
+            ),
+            
+            # Botón para limpiar resultados del ETL
+            html.Button(
+                'Limpiar resultados',
+                id='clear-etl-button',
+                style={'margin': '20px',
+                    'backgroundColor': "#606060",
+                    'color': 'white',
+                    'border': 'none',
+                    'borderRadius': '5px',
+                    'padding': '10px 20px',
+                    'cursor': 'pointer',
+                    'fontSize': '14px',
+                    'marginLeft': '10px'}
+            ),
+            
+            # Sección para opciones de descarga DESPUÉS del ETL (inicialmente oculta)
             html.Div([
-                html.H3("Opciones de guardado", style={'marginTop': '10px'}),
-                html.P("Seleccione el formato y presione 'Iniciar Proceso ETL y Guardar' para comenzar"),
+                html.H3("Opciones de descarga", style={'marginTop': '20px', 'marginBottom': '15px'}),
+                html.P("Seleccione el formato y presione 'Descargar' para obtener los datos procesados"),
                 html.Div([
                     html.Label("Formato de exportación:"),
                     dcc.RadioItems(
@@ -78,85 +108,89 @@ class ETLTab:
                 ], style={'display': 'none', 'border': '1px solid #ddd', 'padding': '15px', 'borderRadius': '5px', 'marginTop': '10px'}),
                 # Campo para nombre de archivo (para formatos de archivo)
                 html.Div(id='file-config', children=[
-                    html.Label("Ruta y nombre del archivo:"),
+                    html.Label("Nombre del archivo:"),
                     dcc.Input(
                         id='filename-input',
                         type='text',
                         value='hotel_bookings_processed',
                         style={'width': '400px', 'marginBottom': '15px'}
                     ),
-                    html.P("Puede especificar una ruta absoluta (C:/carpeta/archivo) o relativa. No es necesario añadir la extensión.", 
+                    html.P("Solo especifique el nombre sin extensión. La extensión se añadirá automáticamente según el formato seleccionado.", 
                         style={'fontSize': '12px', 'color': '#666', 'margin': '0 0 15px 0'}),
                 ]),
-            ], style={'margin': '20px', 'padding': '20px', 'backgroundColor': '#f9f9f9', 'borderRadius': '5px'}),
+                
+                # Botón para descargar después del ETL
+                html.Button(
+                    'Descargar',
+                    id='download-etl-button',
+                    style={'margin': '10px 0',
+                        'backgroundColor': "#28a745",
+                        'color': 'white',
+                        'border': 'none',
+                        'borderRadius': '5px',
+                        'padding': '10px 20px',
+                        'cursor': 'pointer',
+                        'fontSize': '14px'}
+                ),
+                
+                # Componente de descarga (invisible, pero necesario)
+                dcc.Download(id="download-data"),
+                
+                # Botón para guardar en PostgreSQL (separado ya que no implica descarga)
+                html.Button(
+                    'Guardar en PostgreSQL',
+                    id='save-postgres-button',
+                    style={'margin': '10px 0 10px 10px',
+                        'backgroundColor': "#17a2b8",
+                        'color': 'white',
+                        'border': 'none',
+                        'borderRadius': '5px',
+                        'padding': '10px 20px',
+                        'cursor': 'pointer',
+                        'fontSize': '14px',
+                        'display': 'none'}, # Inicialmente oculto
+                    n_clicks=0
+                ),
+                
+                # Área para mostrar resultados del guardado/descarga
+                html.Div(id='save-output', children=save_output, 
+                        style={'marginTop': '15px', 'padding': '15px', 'borderTop': '1px solid #ddd'}),
+            ], 
+            id='export-options-div',
+            style=export_options_div),
             
-            # Botón de inicio del proceso ETL
-            html.Button(
-                'Iniciar Proceso ETL y Guardar',
-                id='start-etl-button',
-                style={'margin': '20px',
-                    'backgroundColor': "#007bff",
-                    'color': 'white',
-                    'border': 'none',
-                    'borderRadius': '5px',
-                    'padding': '10px 20px',
-                    'cursor': 'pointer',
-                    'fontSize': '14px'}
-            ),
-            
-            # Botón para limpiar resultados del ETL
-            html.Button(
-                'Limpiar resultados',
-                id='clear-etl-button',
-                style={'margin': '20px',
-                    'backgroundColor': "#606060",
-                    'color': 'white',
-                    'border': 'none',
-                    'borderRadius': '5px',
-                    'padding': '10px 20px',
-                    'cursor': 'pointer',
-                    'fontSize': '14px',
-                    'marginLeft': '10px'}
-            ),
+            # Separador visual
+            html.Hr(style={'margin': '30px 20px', 'borderTop': '1px solid #eee'}),
             
             # Indicador de carga y resultados del ETL - mostrar resultados almacenados si existen
-            dcc.Loading(
-                id="loading-etl",
-                type="circle",
-                children=html.Div(id='etl-output',
-                                children=etl_output if etl_output else [html.P("", style={'margin': '20px'})]),
-                style={'margin': '20px'}
-            ),
-            
-            # Área para mostrar resultados del guardado - mostrar resultados almacenados si existen
-            html.Div(id='save-output', children=save_output, style={'margin': '20px', 'padding': '15px'}),
+            html.Div([
+                html.H3("Resultados del proceso ETL", 
+                        style={'margin': '20px 0', 'display': 'none' if not etl_output else 'block'}),
+                dcc.Loading(
+                    id="loading-etl",
+                    type="circle",
+                    children=html.Div(id='etl-output',
+                                    children=etl_output if etl_output else [html.P("", style={'margin': '20px'})]),
+                    style={'margin': '20px'}
+                )
+            ], id='etl-results-container'),
         ])
 
     def register_callbacks(self):
         @self.app.callback(
             Output('etl-output', 'children'),
-            Output('save-output', 'children'),
+            Output('export-options-div', 'style'),
             Input('start-etl-button', 'n_clicks'),
-            State('export-format', 'value'),
-            State('filename-input', 'value'),
-            State('postgres-host', 'value'),
-            State('postgres-port', 'value'),
-            State('postgres-db', 'value'),
-            State('postgres-schema', 'value'),
-            State('postgres-table', 'value'),
-            State('postgres-user', 'value'),
-            State('postgres-password', 'value'),
             prevent_initial_call=True
         )
-        def run_etl_and_save_process(n_clicks, export_format, filename, pg_host, pg_port, 
-                                pg_db, pg_schema, pg_table, pg_user, pg_password):
+        def run_etl_process(n_clicks):
             if n_clicks is None:
-                return [html.P("")], []
+                return [html.P("")], {'display': 'none'}
             
             # Verificar que haya datos cargados
             if not DATAFRAMES:
                 return [html.P("No hay datos cargados. Por favor, cargue al menos un conjunto de datos en la pestaña 'Carga de datos'.", 
-                            style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'})], []
+                            style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'})], {'display': 'none'}
             
             # Procesar los DataFrames disponibles
             dfs_to_concat = []
@@ -167,7 +201,7 @@ class ETLTab:
             
             if not dfs_to_concat:
                 return [html.P("No se encontraron DataFrames válidos para procesar.", 
-                            style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'})], []
+                            style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'})], {'display': 'none'}
             
             try:
                 print(f"Concatenando {len(dfs_to_concat)} DataFrames")
@@ -188,75 +222,18 @@ class ETLTab:
                     html.Hr()
                 ])
                 
-                # Guardar los resultados según el formato seleccionado
-                success = False
-                result = ""
-                save_result = None
+                # Mostrar las opciones de exportación después del ETL
+                export_options_style = {
+                    'display': 'block',
+                    'margin': '20px',
+                    'padding': '20px',
+                    'backgroundColor': '#f9f9f9',
+                    'borderRadius': '5px',
+                    'border': '1px solid #28a745'
+                }
+                PROCESS_DATASET['export_options_div'] = export_options_style
                 
-                try:
-                    if export_format == 'csv':
-                        full_path = f"{filename}.csv"
-                        processed_df.to_csv(full_path, index=False)
-                        success = True
-                        result = os.path.abspath(full_path)
-                    
-                    elif export_format == 'xlsx':
-                        full_path = f"{filename}.xlsx"
-                        processed_df.to_excel(full_path, index=False)
-                        success = True
-                        result = os.path.abspath(full_path)
-                    
-                    elif export_format == 'json':
-                        full_path = f"{filename}.json"
-                        processed_df.to_json(full_path, orient='records')
-                        success = True
-                        result = os.path.abspath(full_path)
-                    
-                    elif export_format == 'postgres':
-                        # Configurar la conexión a PostgreSQL
-                        connection_string = f"postgresql://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_db}"
-                        engine = create_engine(connection_string)
-                        
-                        # Crear tabla y guardar datos
-                        table_name = pg_table
-                        schema_name = pg_schema
-                        
-                        processed_df.to_sql(
-                            name=table_name, 
-                            schema=schema_name,
-                            con=engine, 
-                            if_exists='replace',
-                            index=False
-                        )
-                        
-                        success = True
-                        result = f"{pg_host}:{pg_port}/{pg_db}.{pg_schema}.{pg_table}"
-                    
-                    if success:
-                        save_result = html.Div([
-                            html.H3("✅ Guardado exitoso", style={'color': 'green', 'fontWeight': 'bold'}),
-                            html.P(f"Los datos se han guardado correctamente en: {result}")
-                        ])
-                    else:
-                        save_result = html.Div([
-                            html.H3("❌ Error al guardar", style={'color': 'red', 'fontWeight': 'bold'}),
-                            html.P(f"Detalle: {result}")
-                        ])
-                    
-                    # Almacenar resultado del guardado en estado compartido
-                    PROCESS_DATASET['save_output'] = save_result
-                        
-                except Exception as e:
-                    import traceback
-                    traceback.print_exc()
-                    save_result = html.Div([
-                        html.H3("❌ Error inesperado al guardar", style={'color': 'red', 'fontWeight': 'bold'}),
-                        html.P(f"Detalle: {str(e)}")
-                    ])
-                    PROCESS_DATASET['save_output'] = save_result
-                
-                # Retornar tanto los resultados del ETL como los resultados del guardado
-                return [summary] + etl_output, save_result
+                return [summary] + etl_output, export_options_style
                     
             except Exception as e:
                 import traceback
@@ -264,12 +241,262 @@ class ETLTab:
                 return [html.Div([
                     html.H3("❌ Error durante el procesamiento ETL", style={'color': 'red', 'fontWeight': 'bold'}),
                     html.P(f"Detalle: {str(e)}")
-                ])], []
+                ])], {'display': 'none'}
+
+        # Callback para mostrar/ocultar el botón de PostgreSQL
+        @self.app.callback(
+            [Output('save-postgres-button', 'style'),
+            Output('download-etl-button', 'style')],  # Añadir esta salida
+            Input('export-format', 'value')
+        )
+        def toggle_format_buttons(export_format):
+            # Estilo base para el botón de PostgreSQL
+            postgres_button_style = {
+                'margin': '10px 0 10px 10px',
+                'backgroundColor': "#17a2b8",
+                'color': 'white',
+                'border': 'none',
+                'borderRadius': '5px',
+                'padding': '10px 20px',
+                'cursor': 'pointer',
+                'fontSize': '14px'
+            }
+            
+            # Estilo base para el botón de descarga
+            download_button_style = {
+                'margin': '10px 0',
+                'backgroundColor': "#28a745",
+                'color': 'white',
+                'border': 'none',
+                'borderRadius': '5px',
+                'padding': '10px 20px',
+                'cursor': 'pointer',
+                'fontSize': '14px'
+            }
+            
+            if export_format == 'postgres':
+                # Mostrar botón de PostgreSQL, ocultar botón de descarga
+                postgres_button_style['display'] = 'inline-block'
+                download_button_style['display'] = 'none'
+            else:
+                # Ocultar botón de PostgreSQL, mostrar botón de descarga
+                postgres_button_style['display'] = 'none'
+                download_button_style['display'] = 'inline-block'
+            
+            return postgres_button_style, download_button_style
+        
+        # Callback para la descarga de archivos
+        @self.app.callback(
+            Output('download-data', 'data'),
+            Input('download-etl-button', 'n_clicks'),
+            State('export-format', 'value'),
+            State('filename-input', 'value'),
+            prevent_initial_call=True
+        )
+        def generate_download(n_clicks, export_format, filename):
+            if n_clicks is None or n_clicks == 0:
+                return dash.no_update
+                    
+            # Verificar que se haya procesado el ETL
+            if 'processed_data' not in DATAFRAMES:
+                # No podemos descargar nada si no hay datos
+                return dash.no_update
+            
+            processed_df = DATAFRAMES['processed_data']
+            
+            try:
+                if export_format == 'csv':
+                    # Crear un buffer en memoria para el CSV
+                    buffer = io.StringIO()
+                    processed_df.to_csv(buffer, index=False)
+                    buffer.seek(0)
+                    return dict(
+                        content=buffer.getvalue(),
+                        filename=f"{filename}.csv",
+                        type="text/csv"
+                    )
+                
+                elif export_format == 'xlsx':
+                    # Para Excel, necesitamos codificar el contenido en base64
+                    import base64
+                    from io import BytesIO
+                    
+                    # Crear un buffer en memoria para el Excel
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                        processed_df.to_excel(writer, index=False)
+                    output.seek(0)
+                    
+                    # Codificar en base64
+                    content = base64.b64encode(output.getvalue()).decode('utf-8')
+                    
+                    return dict(
+                        content=content,
+                        filename=f"{filename}.xlsx",
+                        type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        base64=True
+                    )
+                
+                elif export_format == 'json':
+                    # Para JSON, preparamos una representación en string
+                    records = processed_df.replace({pd.NA: None}).to_dict('records')
+                    
+                    # Limpiar valores nulos y convertir a formato JSON
+                    def clean_value(value):
+                        if pd.isna(value) or value is pd.NA:
+                            return None
+                        return value
+                    
+                    clean_records = []
+                    for record in records:
+                        clean_record = {}
+                        for key, value in record.items():
+                            clean_record[key] = clean_value(value)
+                        clean_records.append(clean_record)
+                    
+                    # Convertir a JSON string
+                    json_string = json.dumps(clean_records, ensure_ascii=False, default=str, indent=4)
+                    
+                    return dict(
+                        content=json_string,
+                        filename=f"{filename}.json",
+                        type="application/json"
+                    )
+                
+                elif export_format == 'postgres':
+                    # Para PostgreSQL no hay descarga, se maneja por otro botón
+                    return dash.no_update
+                    
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                # Mostrar mensaje de error en la interfaz
+                PROCESS_DATASET['save_output'] = html.Div([
+                    html.H3("❌ Error al preparar la descarga", style={'color': 'red', 'fontWeight': 'bold'}),
+                    html.P(f"Detalle: {str(e)}")
+                ])
+                return dash.no_update
+        
+        # Callback para guardar en PostgreSQL
+        @self.app.callback(
+            Output('save-output', 'children'),
+            [Input('save-postgres-button', 'n_clicks')],
+            [State('postgres-host', 'value'),
+            State('postgres-port', 'value'),
+            State('postgres-db', 'value'),
+            State('postgres-schema', 'value'),
+            State('postgres-table', 'value'),
+            State('postgres-user', 'value'),
+            State('postgres-password', 'value')],
+            prevent_initial_call=True
+        )
+        def save_to_postgres(n_clicks, pg_host, pg_port, pg_db, pg_schema, pg_table, pg_user, pg_password):
+            if n_clicks is None or n_clicks == 0:
+                return dash.no_update
+                    
+            # Verificar que se haya procesado el ETL
+            if 'processed_data' not in DATAFRAMES:
+                return html.Div([
+                    html.H3("❌ Error al guardar", style={'color': 'red', 'fontWeight': 'bold'}),
+                    html.P("No hay datos procesados disponibles. Por favor, ejecute primero el proceso ETL.")
+                ])
+            
+            processed_df = DATAFRAMES['processed_data']
+            
+            try:
+                # Convertir DataFrame a CSV en memoria
+                csv_buffer = StringIO()
+                processed_df.to_csv(csv_buffer, index=False, header=True)
+                csv_buffer.seek(0)
+                
+                # Establecer conexión directa con PostgreSQL
+                conn = psycopg2.connect(
+                    host=pg_host,
+                    port=pg_port,
+                    database=pg_db,
+                    user=pg_user,
+                    password=pg_password
+                )
+                
+                # Asegurarse de que el esquema existe
+                with conn.cursor() as cursor:
+                    if pg_schema != 'public':
+                        cursor.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(
+                            sql.Identifier(pg_schema)
+                        ))
+                    
+                    # Crear tabla basada en las columnas del DataFrame
+                    columns = []
+                    for col_name, dtype in processed_df.dtypes.items():
+                        # Mapeo simple de tipos pandas a PostgreSQL
+                        if "int" in str(dtype):
+                            pg_type = "INTEGER"
+                        elif "float" in str(dtype):
+                            pg_type = "FLOAT"
+                        elif "datetime" in str(dtype):
+                            pg_type = "TIMESTAMP"
+                        elif "bool" in str(dtype):
+                            pg_type = "BOOLEAN"
+                        else:
+                            pg_type = "TEXT"
+                            
+                        columns.append(sql.SQL("{} {}").format(
+                            sql.Identifier(col_name),
+                            sql.SQL(pg_type)
+                        ))
+                    
+                    # Construir y ejecutar la sentencia CREATE TABLE
+                    create_table_query = sql.SQL("CREATE TABLE IF NOT EXISTS {}.{} ({})").format(
+                        sql.Identifier(pg_schema),
+                        sql.Identifier(pg_table),
+                        sql.SQL(", ").join(columns)
+                    )
+                    cursor.execute(create_table_query)
+                    
+                    # Eliminar datos existentes si la tabla ya existía
+                    cursor.execute(sql.SQL("DELETE FROM {}.{}").format(
+                        sql.Identifier(pg_schema),
+                        sql.Identifier(pg_table)
+                    ))
+                    
+                    # Usar COPY para importar CSV a la tabla
+                    cursor.copy_expert(
+                        sql.SQL("COPY {}.{} FROM STDIN WITH CSV HEADER").format(
+                            sql.Identifier(pg_schema),
+                            sql.Identifier(pg_table)
+                        ),
+                        csv_buffer
+                    )
+                    
+                    conn.commit()
+                
+                conn.close()
+                
+                save_result = html.Div([
+                    html.H3("✅ Guardado exitoso en PostgreSQL", style={'color': 'green', 'fontWeight': 'bold'}),
+                    html.P(f"Los datos se han guardado correctamente en: {pg_host}:{pg_port}/{pg_db}.{pg_schema}.{pg_table}"),
+                    html.P(f"Se guardaron {len(processed_df)} registros en la tabla.")
+                ])
+                
+                # Almacenar resultado del guardado en estado compartido
+                PROCESS_DATASET['save_output'] = save_result
+                return save_result
+                        
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                save_result = html.Div([
+                    html.H3("❌ Error al guardar en PostgreSQL", style={'color': 'red', 'fontWeight': 'bold'}),
+                    html.P(f"Detalle: {str(e)}")
+                ])
+                PROCESS_DATASET['save_output'] = save_result
+                return save_result
 
         # Añadir un callback para limpiar los resultados del ETL
         @self.app.callback(
             Output('etl-output', 'children', allow_duplicate=True),
             Output('save-output', 'children', allow_duplicate=True),
+            Output('export-options-div', 'style', allow_duplicate=True),
             Input('clear-etl-button', 'n_clicks'),
             prevent_initial_call=True
         )
@@ -282,10 +509,12 @@ class ETLTab:
                     del PROCESS_DATASET['save_output']
                 if 'processed_data' in DATAFRAMES:
                     del DATAFRAMES['processed_data']
+                if 'export_options_div' in PROCESS_DATASET:
+                    del PROCESS_DATASET['export_options_div']
                 
-                return [html.P("", style={'margin': '20px'})], []
+                return [html.P("", style={'margin': '20px'})], [], {'display': 'none'}
             
-            return dash.no_update, dash.no_update
+            return dash.no_update, dash.no_update, dash.no_update
         
         # Mantener este callback para mostrar/ocultar configuración de PostgreSQL
         @self.app.callback(
@@ -297,7 +526,7 @@ class ETLTab:
             if export_format == 'postgres':
                 return {'display': 'block', 'border': '1px solid #ddd', 'padding': '15px', 'borderRadius': '5px', 'marginTop': '10px'}, {'display': 'none'}
             else:
-                return {'display': 'none'}, {'display': 'block'}           
+                return {'display': 'none'}, {'display': 'block'}        
 
 
     def process_dataframe(self, df) -> Tuple[pd.DataFrame, list]:
