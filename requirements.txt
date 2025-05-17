@@ -1,2 +1,5 @@
 dash==2.18.0
 pandas==2.2.3
+psycopg2==2.9.9
+sqlalchemy==2.0.28
+openpyxl==3.1.2
