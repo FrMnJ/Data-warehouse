@@ -5,6 +5,7 @@ from carga_tab import CargaTab
 from etl_tab import ETLTab
 from mineria_tab import MineriaTab
 from decision_tab import DecisionTab
+from info_compartida import DATAFRAMES, PROCESS_DATASET
 
 
 carga_tab = None
