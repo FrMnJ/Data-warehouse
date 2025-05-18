@@ -560,11 +560,12 @@ class ETLTab:
         ])
         process_elements.append(element)
         
-        # Eliminar filas NaN de columnas numericas
+        # Eliminar filas donde todas las columnas numéricas son NaN (más seguro)
         before_count = len(copy_df)
-        copy_df = copy_df.dropna(subset=copy_df.select_dtypes(include=['number']).columns)
+        numeric_cols = copy_df.select_dtypes(include=['number']).columns
+        copy_df = copy_df.dropna(subset=numeric_cols, how='all')
         element = html.Div([
-            html.H3("Eliminación de filas NaN de columnas numéricas"),
+            html.H3("Eliminación de filas donde todas las columnas numéricas son NaN"),
             html.P(f"Se eliminaron {before_count - len(copy_df)} filas. Quedan {len(copy_df)} registros."),
             dash_table.DataTable(
                 data=copy_df.head(5).to_dict('records'),
@@ -680,7 +681,7 @@ class ETLTab:
             q3 = copy_df['previous_cancellations'].quantile(0.75)
             iqr = q3 - q1
             len_before = len(copy_df)
-            copy_df = copy_df.query('0 < previous_cancellations <= @q3 + 1.5 * @iqr')
+            copy_df = copy_df.query('0 <= previous_cancellations <= @q3 + 1.5 * @iqr')
             if len_before > len(copy_df):  # Solo mostrar si hubo cambios
                 element = html.Div([
                     html.H3("Eliminación de filas con previous_cancellations mayores a 1.5 x el rango intercuartil y menores a 0"),
@@ -702,7 +703,7 @@ class ETLTab:
             q3 = copy_df['previous_bookings_not_canceled'].quantile(0.75)
             iqr = q3 - q1
             len_before = len(copy_df)
-            copy_df = copy_df.query('0 < previous_bookings_not_canceled <= @q3 + 1.5 * @iqr')
+            copy_df = copy_df.query('0 <= previous_bookings_not_canceled <= @q3 + 1.5 * @iqr')
             if len_before > len(copy_df):  # Solo mostrar si hubo cambios
                 element = html.Div([
                     html.H3("Eliminación de filas con previous_bookings_not_canceled mayores a 1.5 x el rango intercuartil y menores a 0"),
@@ -724,7 +725,7 @@ class ETLTab:
             if pd.notna(mean_booking_changes):
                 mean_booking_changes = int(mean_booking_changes)
                 len_before = len(copy_df)
-                copy_df = copy_df.query('0 < booking_changes <= @mean_booking_changes')
+                copy_df = copy_df.query('0 <= booking_changes <= @mean_booking_changes')
                 if len_before > len(copy_df):  # Solo mostrar si hubo cambios
                     element = html.Div([
                         html.H3("Eliminación de filas con booking_changes mayores al promedio y menores a 0"),
@@ -889,7 +890,7 @@ class ETLTab:
             if pd.notna(mean_children):
                 mean_children = int(mean_children)
                 len_before = len(copy_df)
-                copy_df = copy_df.query('0 < children <= @mean_children')
+                copy_df = copy_df.query('0 <= children <= @mean_children')
                 element = html.Div([
                 html.H3("Eliminación de filas en children menores a 0 y mayores al promedio"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
