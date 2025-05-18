@@ -149,7 +149,7 @@ def render_tab(tab):
 # Run the app
 if __name__ == '__main__':
     carga_tab = CargaTab(app)
-    mineria_tab = MineriaTab()
+    mineria_tab = MineriaTab(app)
     etl_tab = ETLTab(app)
     exploratorio_tab = ExploratorioTab(app)
     decision_tab = DecisionTab()
