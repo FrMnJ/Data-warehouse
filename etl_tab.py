@@ -511,12 +511,15 @@ class ETLTab:
                     del DATAFRAMES['processed_data']
                 if 'export_options_div' in PROCESS_DATASET:
                     del PROCESS_DATASET['export_options_div']
-
                 if 'decision_tree_output' in PROCESS_DATASET:
                     del PROCESS_DATASET['decision_tree_output']
+                if 'kmeans_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['kmeans_output']
 
                 if os.path.exists('decision_tree.png'):
                     os.remove('decision_tree.png')
+                if os.path.exists('kmeans.png'):
+                    os.remove('kmeans.png')
                 
                 return [html.P("", style={'margin': '20px'})], [], {'display': 'none'}
             

@@ -10,7 +10,8 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import plotly.graph_objs as go
-
+import matplotlib
+matplotlib.use('Agg')
 
 from info_compartida import DATAFRAMES, PROCESS_DATASET
 
@@ -93,7 +94,7 @@ class MineriaTab:
                 dcc.Loading(
                     id="loading-kmeans",
                     type="circle",
-                    children=html.Div(id='decision-kmeans-output',
+                    children=html.Div(id='kmeans-output',
                                     children=kmeans_output if kmeans_output else [html.P("", style={'margin': '20px'})]),
                     style={'margin': '20px'}
                 )
@@ -175,16 +176,14 @@ class MineriaTab:
         # Normalizamos los datos
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(df_cluster)
-
+        # Convertir a DataFrame para poder agregar la columna de cluster
+        X_scaled_df = pd.DataFrame(X_scaled, columns=df_cluster.columns, index=df_cluster.index)
         # Aplicamos el modelo
         kmeans = KMeans(n_clusters=n_clusters, max_iter=max_iter,
                          algorithm=algorithm, init=init)
-
-        kmeans.fit(X_scaled)
-
-        df_cluster['cluster'] = kmeans.labels_
-
-        return df_cluster, kmeans
+        kmeans.fit(X_scaled_df)
+        X_scaled_df['cluster'] = kmeans.labels_
+        return X_scaled_df, kmeans
     
 
     def iterate_kmeans(self, df):
@@ -319,6 +318,81 @@ class MineriaTab:
                     del PROCESS_DATASET['decision_tree_output']
                 if os.path.exists('decision_tree.png'):
                     os.remove('decision_tree.png')
+                run_style['display'] = 'inline-block'
+                clear_style['display'] = 'none'
+                return [html.P("")], run_style, clear_style
+            return dash.no_update, dash.no_update, dash.no_update
+        
+        @self.app.callback(
+            Output('kmeans-output', 'children', allow_duplicate=True),
+            Output('run-kmeans', 'style', allow_duplicate=True),
+            Output('clear-kmeans-output', 'style', allow_duplicate=True),
+            Input('run-kmeans', 'n_clicks'),
+            State('run-kmeans', 'style'),
+            State('clear-kmeans-output', 'style'),
+            prevent_initial_call=True,
+        )
+        def run_kmeans_process(n_clicks, run_style, clear_style):
+            print("Ejecutando el KMeans")
+            if n_clicks is None:
+                print("No se ha hecho clic en el botón")
+                return [html.P("")], dash.no_update, dash.no_update
+
+            if 'processed_data' not in DATAFRAMES:
+                print("No hay datos procesados")
+                return [html.P("No hay datos procesados. Por favor, ejecute el ETL en  la pestaña 'ETL'.", 
+                            style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'})], dash.no_update, dash.no_update
+            
+            processed_df = DATAFRAMES['processed_data'] 
+            print("Iterando sobre parametros del KMeans")
+            model = self.iterate_kmeans(processed_df)
+
+            children = []
+            if model is None:
+                print("No se pudo encontrar un modelo KMeans válido.")
+                children.append(html.P("No se pudo encontrar un modelo KMeans válido. Por favor, revise los datos o los parámetros.", style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'}))
+                return children, run_style, clear_style
+            print("Mostrando resultados del KMeans")
+            # Mostrar el clustering
+            fig = plt.figure(figsize=(12, 8))
+            sns.scatterplot(data=model['df_clustered'], x='previous_cancellations', y='adr', hue='cluster', palette='Set1')
+            plt.title('Clustering KMeans')  
+            plt.tight_layout()
+            plt.savefig('kmeans.png')
+            plt.close(fig)
+            import base64
+            with open('kmeans.png', 'rb') as f:
+                img_bytes = f.read()
+            img_b64 = base64.b64encode(img_bytes).decode()
+            img_src = f'data:image/png;base64,{img_b64}'
+            children.append(
+                html.H3("KMeans Clustering", style={'margin': '20px'})
+            )
+            children.append(
+                html.Img(src=img_src, style={'width': '100%', 'height': 'auto'})
+            )
+            
+            run_style['display'] = 'none'
+            clear_style['display'] = 'inline-block'
+            
+            PROCESS_DATASET['kmeans_output'] = children
+            return children, run_style, clear_style
+        
+        @self.app.callback(
+            Output('kmeans-output', 'children', allow_duplicate=True),
+            Output('run-kmeans', 'style', allow_duplicate=True),
+            Output('clear-kmeans-output', 'style', allow_duplicate=True),
+            Input('clear-kmeans-output', 'n_clicks'),
+            State('run-kmeans', 'style'),
+            State('clear-kmeans-output', 'style'),
+            prevent_initial_call=True,
+        )
+        def clear_kmeans_output(n_clicks, run_style, clear_style):
+            if n_clicks:
+                if 'kmeans_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['kmeans_output']
+                if os.path.exists('kmeans.png'):
+                    os.remove('kmeans.png')
                 run_style['display'] = 'inline-block'
                 clear_style['display'] = 'none'
                 return [html.P("")], run_style, clear_style
