@@ -209,6 +209,16 @@ class ETLTab:
                 print(f"DataFrame concatenado con forma: {full_df.shape}")
                 processed_df, etl_output = self.process_dataframe(full_df)
                 
+                # Mostrar advertencia si el DataFrame quedó vacío tras el ETL
+                if processed_df.empty:
+                    warning = html.Div([
+                        html.H3("⚠️ Advertencia: El conjunto de datos quedó vacío tras el proceso ETL", style={'color': 'orange'}),
+                        html.P("Esto puede deberse a que el archivo cargado no contiene columnas requeridas, o los filtros eliminaron todos los registros."),
+                        html.P("Verifique que el archivo incluya campos como 'lead_time', 'adr', 'country', 'reservation_status_date', entre otros.")
+                    ])
+                    return [warning] + etl_output, {'display': 'none'}
+
+
                 # Almacenar resultados en estado compartido
                 print(f"Almacenando DataFrame procesado con forma: {processed_df.shape}")
                 DATAFRAMES['processed_data'] = processed_df
@@ -1030,6 +1040,9 @@ class ETLTab:
             html.Hr(),
         ])
         process_elements.append(element)
+
+        print("Final shape of processed_df:", copy_df.shape)
+
         
         return copy_df, process_elements
     
