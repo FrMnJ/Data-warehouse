@@ -104,15 +104,13 @@ class MineriaTab:
 
     def run_decision_tree(self, df, criterion,
                            splitter,max_depth, min_samples_split,  min_samples_leaf):
-        # Separar las caracteristicas para el analisis
-        df = df[[
-        'lead_time', 'is_repeated_guest', 'previous_cancellations', 
-        'booking_changes', 'deposit_type', 'total_guests', 'is_canceled'
-        ]]
+
+        # Eliminar columnas de tipo datetime
+        df = df.drop(columns=df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]', 'datetime64']).columns)
 
         # Convertir las variables categoricas a numericas
         # Usando one hot encoding
-        df = pd.get_dummies(df, columns=['deposit_type'], drop_first=True)
+        df = pd.get_dummies(df)
 
         # Separar las variables predictoras y la variable objetivo
         X = df.drop('is_canceled', axis=1)
@@ -170,9 +168,18 @@ class MineriaTab:
     
     def run_kmeans(self, df, n_clusters, max_iter, algorithm, init):
         # Variables a usar para el clustering
-        features = ['lead_time', 'total_guests', 'adr', 'previous_cancellations', 'total_nights']
-        # Eliminamos columnas que no son necesarias
+        features = [
+        "lead_time", "stays_in_weekend_nights", "stays_in_week_nights", 
+        "adults", "children", "babies", "is_repeated_guest", 
+        "days_in_waiting_list", "adr", "required_car_parking_spaces",
+        "total_of_special_requests", "total_guests", "stays_longer_than_7_days",
+        "total_nights"
+        ]
+        
         df_cluster = df[features].copy()
+
+        df_cluster["stays_longer_than_7_days"] = df_cluster["stays_longer_than_7_days"].astype(int)
+
         # Normalizamos los datos
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(df_cluster)
@@ -182,8 +189,8 @@ class MineriaTab:
         kmeans = KMeans(n_clusters=n_clusters, max_iter=max_iter,
                          algorithm=algorithm, init=init)
         kmeans.fit(X_scaled_df)
-        X_scaled_df['cluster'] = kmeans.labels_
-        return X_scaled_df, kmeans
+        df_cluster['cluster'] = kmeans.labels_
+        return df_cluster, kmeans
     
 
     def iterate_kmeans(self, df):
@@ -355,7 +362,7 @@ class MineriaTab:
             print("Mostrando resultados del KMeans")
             # Mostrar el clustering
             fig = plt.figure(figsize=(12, 8))
-            sns.scatterplot(data=model['df_clustered'], x='previous_cancellations', y='adr', hue='cluster', palette='Set1')
+            sns.scatterplot(data=model['df_clustered'], x='total_of_special_requests', y='adr', hue='cluster', palette='Set1')
             plt.title('Clustering KMeans')  
             plt.tight_layout()
             plt.savefig('kmeans.png')
