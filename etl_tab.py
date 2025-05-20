@@ -559,25 +559,27 @@ class ETLTab:
             html.Hr(),
         ])
         process_elements.append(element)
-        
-        # Eliminar filas donde todas las columnas numéricas son NaN (más seguro)
-        before_count = len(copy_df)
-        numeric_cols = copy_df.select_dtypes(include=['number']).columns
-        copy_df = copy_df.dropna(subset=numeric_cols, how='all')
-        element = html.Div([
-            html.H3("Eliminación de filas donde todas las columnas numéricas son NaN"),
-            html.P(f"Se eliminaron {before_count - len(copy_df)} filas. Quedan {len(copy_df)} registros."),
-            dash_table.DataTable(
-                data=copy_df.head(5).to_dict('records'),
-                columns=[{"name": i, "id": i} for i in copy_df.columns],
-                page_size=5,
-                style_table={'overflowX': 'auto'},
-                style_cell={'textAlign': 'left'},
-            ),
-            html.Hr(),
-        ])
-        process_elements.append(element)
-        
+
+        # Rellenar filas de columnas numericas con datos que no son numericos con 0 o 0.0
+        for column in copy_df.columns:
+            if copy_df[column].dtype in ['int64', 'float64']:
+                len_before = len(copy_df)
+                copy_df[column] = pd.to_numeric(copy_df[column], errors='coerce').fillna(0)
+                if len_before != len(copy_df):
+                    element = html.Div([
+                        html.H3(f"Relleno de filas en {column}"),
+                        html.P(f"Se reemplazaron {len_before-len(copy_df)} valores. Manteniendo {len(copy_df)} registros."),
+                        dash_table.DataTable(
+                            data=copy_df.head(5).to_dict('records'),
+                            columns=[{"name": i, "id": i} for i in copy_df.columns],
+                            page_size=5,
+                            style_table={'overflowX': 'auto'},
+                            style_cell={'textAlign': 'left'},
+                        ),
+                        html.Hr(),
+                    ])
+                    process_elements.append(element)
+
         # Borrar columnas con un porcentaje de nulos mayor al 50%
         columns_to_drop = []
         for column in copy_df.columns:
@@ -637,12 +639,31 @@ class ETLTab:
             ])
             process_elements.append(element)
         
-        # Eliminar filas con más de 2 bebes column 'babies'
-        if "babies" in copy_df.columns:
+        # Eliminar NaN en babies 
+        if 'babies' in copy_df.columns:
             len_before = len(copy_df)
-            copy_df = copy_df.query('0 <= babies <= 2')
+            copy_df = copy_df.dropna(subset=['babies'])
+            if len_before > len(copy_df):
+                element = html.Div([
+                    html.H3("Eliminación de filas con babies nulo"),
+                    html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
+                    dash_table.DataTable(
+                        data=copy_df.head(5).to_dict('records'),
+                        columns=[{"name": i, "id": i} for i in copy_df.columns],
+                        page_size=5,
+                        style_table={'overflowX': 'auto'},
+                        style_cell={'textAlign': 'left'},
+                    ),
+                    html.Hr(),
+                ])
+                process_elements.append(element)
+
+        # Eliminar filas con menos de 0 o más de 10 children
+        if 'children' in copy_df.columns:
+            len_before = len(copy_df)
+            copy_df = copy_df.query('0 <= children <= 10')
             element = html.Div([
-                html.H3("Eliminación de filas con más de 2 bebes"),
+                html.H3("Eliminación de filas con menos de 0 o más de 10 children"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
@@ -654,6 +675,86 @@ class ETLTab:
                 html.Hr(),
             ])
             process_elements.append(element)
+
+        #  Eliminar mayores al promedio stays_in_weekend_nights
+        if 'stays_in_weekend_nights' in copy_df.columns:
+            len_before = len(copy_df)
+            mean_weekend_nights = copy_df['stays_in_weekend_nights'].mean()
+            copy_df = copy_df.query('0 <= stays_in_weekend_nights <= @mean_weekend_nights')
+            element = html.Div([
+                html.H3("Eliminación de filas donde stays_in_weekend_nightss es mayor al promedio"),
+                html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    page_size=5,
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+            process_elements.append(element)
+
+        #  Eliminar mayores al promedio stays_in_week_nights
+        if 'stays_in_week_nights' in copy_df.columns:
+            len_before = len(copy_df)          
+            mean_week_nights = copy_df['stays_in_week_nights']
+            copy_df = copy_df.query('0 <= stays_in_week_nights <= @mean_week_nights')
+            element = html.Div([
+                html.H3("Eliminación de filas donde stays_in_week_nights es mayor al promedio"),
+                html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    page_size=5,
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+            process_elements.append(element)
+        
+        # Days_in_waiting_list > 0 and 1.5 rango intercuartilico
+        if 'days_in_waiting_list' in copy_df.columns:
+            len_before = len(copy_df)
+            # Solo considerar valores mayores a 0
+            filtered = copy_df[copy_df['days_in_waiting_list'] > 0]
+            if not filtered.empty:
+                Q1 = filtered['days_in_waiting_list'].quantile(0.25)
+                Q3 = filtered['days_in_waiting_list'].quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - 1.5 * IQR
+                upper_bound = Q3 + 1.5 * IQR
+                # Mantener los que están dentro del rango o son 0
+                mask = (
+                    (copy_df['days_in_waiting_list'] == 0) |
+                    ((copy_df['days_in_waiting_list'] > 0) &
+                     (copy_df['days_in_waiting_list'] >= lower_bound) &
+                     (copy_df['days_in_waiting_list'] <= upper_bound))
+                )
+                copy_df = copy_df[mask]
+                element = html.Div([
+                    html.H3("Filtrado de outliers en days_in_waiting_list usando rango intercuartílico"),
+                    html.P(f"Se eliminaron {len_before - len(copy_df)} filas. Quedan {len(copy_df)} registros."),
+                    dash_table.DataTable(
+                        data=copy_df.head(5).to_dict('records'),
+                        columns=[{"name": i, "id": i} for i in copy_df.columns],
+                        page_size=5,
+                        style_table={'overflowX': 'auto'},
+                        style_cell={'textAlign': 'left'},
+                    ),
+                    html.Hr(),
+                ])
+                process_elements.append(element)
+
+        #   previous cancellations / babies / children / is_repetead_guests ??? / previous_bookings_not_canceled / booking_changes / 
+        copy_df.drop(columns=['previous_cancellations', 'previous_bookings_not_canceled', 'booking_changes'], inplace=True, errors='ignore')
+
+        # cambiar a frecuencia company y agent de cuantitativo a cualitativo
+        if 'company' in copy_df.columns:
+            copy_df['company'] = copy_df['company'].astype('category')
+        if 'agent' in copy_df.columns:
+            copy_df['agent'] = copy_df['agent'].astype('category') 
 
         # Eliminar filas con Undefined
         for column in copy_df.columns:
@@ -675,21 +776,19 @@ class ETLTab:
                     ])
                     process_elements.append(element)
 
-        # Eliminar filas con previous_cancellations mayores a 1.5 x el rango intercuartil y menores a 0
+        # Eliminar filas de previous_cancellation mayores al promedio y menores a 0
         if 'previous_cancellations' in copy_df.columns:
-            q1 = copy_df['previous_cancellations'].quantile(0.25)
-            q3 = copy_df['previous_cancellations'].quantile(0.75)
-            iqr = q3 - q1
-            len_before = len(copy_df)
-            copy_df = copy_df.query('0 <= previous_cancellations <= @q3 + 1.5 * @iqr')
-            if len_before > len(copy_df):  # Solo mostrar si hubo cambios
+            mean_previous_cancellations = copy_df['previous_cancellations'].mean()
+            if pd.notna(mean_previous_cancellations):
+                mean_previous_cancellations = int(mean_previous_cancellations)
+                len_before = len(copy_df)
+                copy_df = copy_df.query('0 <= previous_cancellations <= @mean_previous_cancellations')
                 element = html.Div([
-                    html.H3("Eliminación de filas con previous_cancellations mayores a 1.5 x el rango intercuartil y menores a 0"),
+                    html.H3("Eliminación de filas con previous_cancellations mayores al promedio y menores a 0"),
                     html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        page_size=5,
                         style_table={'overflowX': 'auto'},
                         style_cell={'textAlign': 'left'},
                     ),
@@ -697,21 +796,19 @@ class ETLTab:
                 ])
                 process_elements.append(element)
 
-        # Eliminar filas previous_bookings_not_canceled mayores a 1.5 x el rango intercuartil y menores a 0
+        # Eliminar filas previous_bookings_not_canceled mayores al promedio y menores a 0
         if 'previous_bookings_not_canceled' in copy_df.columns:
-            q1 = copy_df['previous_bookings_not_canceled'].quantile(0.25)
-            q3 = copy_df['previous_bookings_not_canceled'].quantile(0.75)
-            iqr = q3 - q1
-            len_before = len(copy_df)
-            copy_df = copy_df.query('0 <= previous_bookings_not_canceled <= @q3 + 1.5 * @iqr')
-            if len_before > len(copy_df):  # Solo mostrar si hubo cambios
+            mean_previous_bookings_not_canceled = copy_df['previous_bookings_not_canceled'].mean()
+            if pd.notna(mean_previous_bookings_not_canceled):
+                mean_previous_bookings_not_canceled = int(mean_previous_bookings_not_canceled)
+                len_before = len(copy_df)
+                copy_df = copy_df.query('0 <= previous_bookings_not_canceled <= @mean_previous_bookings_not_canceled')
                 element = html.Div([
-                    html.H3("Eliminación de filas con previous_bookings_not_canceled mayores a 1.5 x el rango intercuartil y menores a 0"),
+                    html.H3("Eliminación de filas con previous_bookings_not_canceled mayores al promedio y menores a 0"),
                     html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        page_size=5,
                         style_table={'overflowX': 'auto'},
                         style_cell={'textAlign': 'left'},
                     ),
@@ -733,7 +830,6 @@ class ETLTab:
                         dash_table.DataTable(
                             data=copy_df.head(5).to_dict('records'),
                             columns=[{"name": i, "id": i} for i in copy_df.columns],
-                            page_size=5,
                             style_table={'overflowX': 'auto'},
                             style_cell={'textAlign': 'left'},
                         ),
@@ -755,7 +851,6 @@ class ETLTab:
                         dash_table.DataTable(
                             data=copy_df.head(5).to_dict('records'),
                             columns=[{"name": i, "id": i} for i in copy_df.columns],
-                            page_size=5,
                             style_table={'overflowX': 'auto'},
                             style_cell={'textAlign': 'left'},
                         ),
@@ -774,7 +869,6 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        page_size=5,
                         style_table={'overflowX': 'auto'},
                         style_cell={'textAlign': 'left'},
                     ),
@@ -799,7 +893,6 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        page_size=5,
                         style_table={'overflowX': 'auto'},
                         style_cell={'textAlign': 'left'},
                     ),
@@ -817,7 +910,6 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        page_size=5,
                         style_table={'overflowX': 'auto'},
                         style_cell={'textAlign': 'left'},
                     ),
@@ -839,7 +931,6 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        page_size=5,
                         style_table={'overflowX': 'auto'},
                         style_cell={'textAlign': 'left'},
                     ),
@@ -856,9 +947,8 @@ class ETLTab:
                 html.H3("Cambio de reservation_status_date a formato de fecha real"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas con fechas inválidas. Quedan {len(copy_df)} registros."),
                 dash_table.DataTable(
-                    data=copy_df.to_dict('records'),
+                    data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    page_size=10,
                     style_table={'overflowX': 'auto'},
                     style_cell={'textAlign': 'left'},
                 ),
@@ -874,9 +964,8 @@ class ETLTab:
                 html.H3("Reemplazo de valores nulos en required_car_parking_spaces con 0"),
                 html.P(f"Se reemplazaron {rows_to_fill} valores. Manteniendo {len(copy_df)} registros."),
                 dash_table.DataTable(
-                    data=copy_df.to_dict('records'),
+                    data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    page_size=10,
                     style_table={'overflowX': 'auto'},
                     style_cell={'textAlign': 'left'},
                 ),
@@ -895,9 +984,8 @@ class ETLTab:
                 html.H3("Eliminación de filas en children menores a 0 y mayores al promedio"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
                 dash_table.DataTable(
-                    data=copy_df.to_dict('records'),
+                    data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    page_size=10,
                     style_table={'overflowX': 'auto'},
                     style_cell={'textAlign': 'left'},
                     ),
@@ -915,9 +1003,8 @@ class ETLTab:
                 html.H3("Eliminación de filas con arrival_date_month INVALID_MONTH"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
                 dash_table.DataTable(
-                    data=copy_df.to_dict('records'),
+                    data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    page_size=10,
                     style_table={'overflowX': 'auto'},
                     style_cell={'textAlign': 'left'},
                 ),
@@ -934,9 +1021,8 @@ class ETLTab:
                 html.H3("Eliminación de filas con assigned_room_type que empiezan con 'X'"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
                 dash_table.DataTable(
-                    data=copy_df.to_dict('records'),
+                    data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    page_size=10,
                     style_table={'overflowX': 'auto'},
                     style_cell={'textAlign': 'left'},
                 ),
@@ -953,9 +1039,8 @@ class ETLTab:
                 html.H3("Reemplazo de valores UNKNOWN en deposit_type por Otro"),
                 html.P(f"Se reemplazaron {replaced_count} valores. Manteniendo {len(copy_df)} registros."),
                 dash_table.DataTable(
-                    data=copy_df.to_dict('records'),
+                    data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    page_size=10,
                     style_table={'overflowX': 'auto'},
                     style_cell={'textAlign': 'left'},
                 ),
@@ -972,9 +1057,8 @@ class ETLTab:
                 html.H3("Eliminación de filas con country INVALID_COUNTRY"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
                 dash_table.DataTable(
-                    data=copy_df.to_dict('records'),
+                    data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    page_size=10,
                     style_table={'overflowX': 'auto'},
                     style_cell={'textAlign': 'left'},
                 ),
@@ -989,9 +1073,8 @@ class ETLTab:
             html.H3("Agregando columna total_guests"),
             html.P(f"Se mantienen {len(copy_df)} registros."),
             dash_table.DataTable(
-                data=copy_df.to_dict('records'),
+                data=copy_df.head(5).to_dict('records'),
                 columns=[{"name": i, "id": i} for i in copy_df.columns],
-                page_size=10,
                 style_table={'overflowX': 'auto'},
                 style_cell={'textAlign': 'left'},
             ),
@@ -1000,14 +1083,13 @@ class ETLTab:
         process_elements.append(element)
         
         # Agregar un campo booleano para saber si la estancia fue mayor a 7 días
-        copy_df['stay_longer_than_7_days'] = copy_df['stays_in_weekend_nights'] + copy_df['stays_in_week_nights'] > 7
+        copy_df['stays_longer_than_7_days'] = copy_df['stays_in_weekend_nights'] + copy_df['stays_in_week_nights'] > 7
         element = html.Div([
             html.H3("Agregando columna stay_longer_than_7_days"),
             html.P(f"Se mantienen {len(copy_df)} registros."),
             dash_table.DataTable(
-                data=copy_df.to_dict('records'),
+                data=copy_df.head(5).to_dict('records'),
                 columns=[{"name": i, "id": i} for i in copy_df.columns],
-                page_size=10,
                 style_table={'overflowX': 'auto'},
                 style_cell={'textAlign': 'left'},
             ),
@@ -1021,15 +1103,32 @@ class ETLTab:
             html.H3("Agregando columna total_nights"),
             html.P(f"Se mantienen {len(copy_df)} registros."),
             dash_table.DataTable(
-                data=copy_df.to_dict('records'),
+                data=copy_df.head(5).to_dict('records'),
                 columns=[{"name": i, "id": i} for i in copy_df.columns],
-                page_size=10,
                 style_table={'overflowX': 'auto'},
                 style_cell={'textAlign': 'left'},
             ),
             html.Hr(),
         ])
         process_elements.append(element)
+
+        # total nights eliminar valores atipicos
+        if 'total_nights' in copy_df.columns:
+            len_before = len(copy_df)
+            mean_total_nights = copy_df['total_nights'].mean()
+            copy_df = copy_df.query('0 <= total_nights <= @mean_total_nights')
+            element = html.Div([
+                html.H3("Eliminación de filas con total_nights mayores al promedio y menores a 0"),
+                html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+            process_elements.append(element)
         
         # Resumen final del procesamiento
         element = html.Div([
