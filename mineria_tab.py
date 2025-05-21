@@ -167,7 +167,6 @@ class MineriaTab:
         return best_model
     
     def run_kmeans(self, df, n_clusters, max_iter, algorithm, init):
-        # Variables a usar para el clustering
         features = [
         "lead_time", "stays_in_weekend_nights", "stays_in_week_nights", 
         "adults", "children", "babies", "is_repeated_guest", 
@@ -287,12 +286,28 @@ class MineriaTab:
                     style={'margin': '20px'}
                 )
             )
-            # Mostrar el arbol de decisión
-            fig, ax = plt.subplots(figsize=(20, 35))
-            plot_tree(model['model'], feature_names=model['X_train'].columns, filled=True, ax=ax)
+            n_nodes = model['model'].tree_.node_count
+            max_depth = model['model'].tree_.max_depth
+
+            # Ajuste dinámico del tamaño de la figura
+            width = max(40, min(200, n_nodes // 2))  
+            height = max(15, min(80, max_depth * 4))
+            plot_max_depth = max_depth if max_depth <= 6 else 4
+            fig, ax = plt.subplots(figsize=(width, height))
+            plot_tree(
+                model['model'],
+                feature_names=model['X_train'].columns,
+                filled=True,
+                ax=ax,
+                max_depth=plot_max_depth,
+                fontsize=18,  # Fuente más grande
+                class_names=['No cancelado', 'Cancelado'],
+                proportion=True,
+                precision=2
+            )
             plt.title('Árbol de decisión')  
-            plt.tight_layout()
-            plt.savefig('decision_tree.png')
+            plt.tight_layout(rect=[0, 0, 1, 0.98])  # Deja más espacio arriba y abajo
+            plt.savefig('decision_tree.png', bbox_inches='tight')  # Ajusta los bordes
             plt.close(fig)
             import base64
             with open('decision_tree.png', 'rb') as f:
