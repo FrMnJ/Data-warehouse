@@ -14,7 +14,7 @@ class ExploratorioTab:
             html.H2("Análisis Exploratorio", style={'margin': '20px'}),
 
             html.Div([
-                html.Label("Selecciona una columna numérica:"),
+                html.Label("Selecciona una columna:"),
                 dcc.Dropdown(id='eda-column-dropdown', placeholder="Selecciona una columna"),
             ], style={'margin': '20px', 'width': '40%'}),
 
@@ -38,9 +38,9 @@ class ExploratorioTab:
             if tab_value != 'exploratorio' or 'processed_data' not in DATAFRAMES:
                 return [], None
             df = DATAFRAMES['processed_data']
-            numeric_columns = df.select_dtypes(include='number').columns
-            options = [{'label': col, 'value': col} for col in numeric_columns]
-            return options, numeric_columns[0] if len(numeric_columns) > 0 else None
+            all_columns = df.columns
+            options = [{'label': col, 'value': col} for col in all_columns]
+            return options, None
 
         @self.app.callback(
             Output('eda-stats-output', 'children'),
@@ -54,42 +54,60 @@ class ExploratorioTab:
                 raise PreventUpdate
 
             df = DATAFRAMES['processed_data']
-            if df.empty or column not in df.columns or df[column].dropna().empty:
+            if df.empty or column not in df.columns:
                 return html.P("No hay datos disponibles para la columna seleccionada."), px.scatter(), px.box(), ""
 
-            desc = df[column].describe().round(2)
-            translation = {
-                "count": "Cantidad",
-                "mean": "Media",
-                "std": "Desviación estándar",
-                "min": "Mínimo",
-                "25%": "Percentil 25",
-                "50%": "Mediana",
-                "75%": "Percentil 75",
-                "max": "Máximo"
-            }
+            col_data = df[column].dropna()
+            if pd.api.types.is_numeric_dtype(col_data):
+                desc = col_data.describe().round(2)
+                translation = {
+                    "count": "Cantidad",
+                    "mean": "Media",
+                    "std": "Desviación estándar",
+                    "min": "Mínimo",
+                    "25%": "Percentil 25",
+                    "50%": "Mediana",
+                    "75%": "Percentil 75",
+                    "max": "Máximo"
+                }
 
-            stats_table = html.Table([
-                html.Thead(html.Tr([html.Th("Estadística"), html.Th("Valor")]))
-            ] + [
-                html.Tr([html.Td(translation.get(str(index), str(index))), html.Td(str(value))])
-                for index, value in desc.items()
-            ], style={"width": "300px", "borderCollapse": "collapse", "border": "1px solid #ccc"})
+                stats_table = html.Table([
+                    html.Thead(html.Tr([html.Th("Estadística"), html.Th("Valor")]))
+                ] + [
+                    html.Tr([html.Td(translation.get(str(index), str(index))), html.Td(str(value))])
+                    for index, value in desc.items()
+                ], style={"width": "300px", "borderCollapse": "collapse", "border": "1px solid #ccc"})
 
-            fig_hist = px.histogram(df, x=column, nbins=30, title=f"Histograma de {column}", color_discrete_sequence=['#636efa'])
-            fig_box = px.box(df, y=column, title=f"Boxplot de {column}", color_discrete_sequence=['#636efa'])
+                fig_hist = px.histogram(df, x=column, nbins=30, title=f"Histograma de {column}", color_discrete_sequence=['#636efa'])
+                fig_box = px.box(df, y=column, title=f"Boxplot de {column}", color_discrete_sequence=['#636efa'])
 
-            # Explicación automática
-            explanation = html.Div([
-                html.H4("📊 Explicación automática del análisis:", style={'marginTop': '30px'}),
-                html.P(f"La media de '{column}' es {desc['mean']}, y su mediana es {desc['50%']}. Esto sugiere que la distribución es "
-                    f"{'simétrica' if abs(desc['mean'] - desc['50%']) < desc['std'] * 0.1 else 'asimétrica'}."),
+                explanation = html.Div([
+                    html.H4("📊 Explicación automática del análisis:", style={'marginTop': '30px'}),
+                    html.P(f"La media de '{column}' es {desc['mean']}, y su mediana es {desc['50%']}. Esto sugiere que la distribución es "
+                        f"{'simétrica' if abs(desc['mean'] - desc['50%']) < desc['std'] * 0.1 else 'asimétrica'}."),
 
-                html.P(f"El rango intercuartil (IQR) va de {desc['25%']} a {desc['75%']}, indicando una dispersión "
-                    f"{'moderada' if desc['75%'] - desc['25%'] < desc['std'] else 'amplia'} de los valores."),
+                    html.P(f"El rango intercuartil (IQR) va de {desc['25%']} a {desc['75%']}, indicando una dispersión "
+                        f"{'moderada' if desc['75%'] - desc['25%'] < desc['std'] else 'amplia'} de los valores."),
 
-                html.P(f"Se detectaron valores mínimos y máximos de {desc['min']} a {desc['max']}, "
-                    f"{'con presencia de posibles outliers.' if (desc['min'] < desc['25%'] - 1.5 * (desc['75%'] - desc['25%']) or desc['max'] > desc['75%'] + 1.5 * (desc['75%'] - desc['25%'])) else 'sin valores atípicos destacados.'}")
-            ])
+                    html.P(f"Se detectaron valores mínimos y máximos de {desc['min']} a {desc['max']}, "
+                        f"{'con presencia de posibles outliers.' if (desc['min'] < desc['25%'] - 1.5 * (desc['75%'] - desc['25%']) or desc['max'] > desc['75%'] + 1.5 * (desc['75%'] - desc['25%'])) else 'sin valores atípicos destacados.'}")
+                ])
+                return stats_table, fig_hist, fig_box, explanation
+            else:
+                value_counts = col_data.value_counts().reset_index()
+                value_counts.columns = [column, 'count']
 
-            return stats_table, fig_hist, fig_box, explanation
+                fig = px.bar(value_counts, x=column, y='count', title=f"Frecuencia de {column}", color_discrete_sequence=['#636efa'])
+
+                table = html.Table([
+                    html.Thead(html.Tr([html.Th(column), html.Th("Frecuencia")])),
+                    html.Tbody([html.Tr([html.Td(row[column]), html.Td(row['count'])]) for _, row in value_counts.iterrows()])
+                ], style={"borderCollapse": "collapse", "border": "1px solid #ccc"})
+
+                explanation = html.Div([
+                    html.H4("📊 Frecuencia de categorías:", style={'marginTop': '30px'}),
+                    html.P(f"Se detectaron {value_counts.shape[0]} valores únicos para la columna '{column}'."),
+                    html.P("El gráfico muestra la distribución de frecuencias.")
+                ])
+
+                return table, fig, px.box(), explanation
