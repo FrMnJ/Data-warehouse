@@ -288,7 +288,7 @@ class MineriaTab:
                 )
             )
             # Mostrar el arbol de decisión
-            fig, ax = plt.subplots(figsize=(12, 8))
+            fig, ax = plt.subplots(figsize=(20, 35))
             plot_tree(model['model'], feature_names=model['X_train'].columns, filled=True, ax=ax)
             plt.title('Árbol de decisión')  
             plt.tight_layout()
