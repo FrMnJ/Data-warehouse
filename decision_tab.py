@@ -53,6 +53,14 @@ class DecisionTab:
             return html.Div([
             html.H2("Toma de decisiones",
                     style={'margin': '20px'}),  
+            # Grafica de pastel de clientes que hace petciones especiales
+            html.Div([
+                html.H3("Grafica de clientes que hacen peticiones especiales"),
+                cake,
+                html.P("Esta gráfica muestra la proporción de clientes que hacen peticiones especiales en comparación con aquellos que no lo hacen.", style={'margin-top': '10px'}),
+                html.P("Esta información resulta útil para entender la magnitud del fenómeno y su impacto en la operación del hotel."),
+                html.P("En este caso, el 44.8% de los clientes hacen peticiones especiales, lo que indica que es un fenómeno significativo y debe ser considerado en la toma de decisiones.", style={'margin-top': '10px'}),
+            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
             html.Div([
                 html.H3("Grafica de peticiones especiales por día"),
                 html.Label("Selecciona una fecha de inicio:", style={'margin-right': '10px', 'font-weight': 'bold'}),
@@ -70,12 +78,9 @@ class DecisionTab:
                     style={'margin-bottom': '10px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
                 ),
                 dcc.Graph(id='special-requests-graph', style={'height': '400px', 'width': '100%', 'margin-top': '20px'}), 
+                html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px'}),
+                html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px'})
             ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de pastel de clientes que hace petciones especiales
-            html.Div([
-                html.H3("Grafica de clientes que hacen peticiones especiales"),
-                cake,
-            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} )
         ])
     
     def register_callbacks(self):
