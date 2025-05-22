@@ -1239,7 +1239,7 @@ class ETLTab:
 
         # agregar columna is_demading_client >= total_of_special_requests 2
         if 'total_of_special_requests' in copy_df.columns:
-            copy_df['is_demanding_client'] = copy_df['total_of_special_requests'] >= 2
+            copy_df['is_demanding_client'] = copy_df['total_of_special_requests'] > 0
             copy_df['is_demanding_client'] = copy_df['is_demanding_client'].astype('category')
             element = html.Div([
                 html.H3("Agregando columna is_demading_client"),
