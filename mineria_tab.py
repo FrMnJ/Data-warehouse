@@ -91,7 +91,7 @@ class MineriaTab:
         # Definimos X y Y 
         # Eliminar columnas de tipo datetime
         df = df.drop(columns=df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]', 'datetime64']).columns)
-        df = df.drop(columns=['total_of_special_requests'])
+        df = df.drop(columns=['total_of_special_requests', 'arrival_date_year', 'arrival_date_month', 'arrival_date_week_number', 'arrival_date_day_of_month', 'is_canceled', 'adr'])
         assert 'is_demanding_client' in df.columns, "La columna 'is_demanding_client' no existe en el DataFrame."
         df['is_demanding_client'] = df['is_demanding_client'].astype('int')
 
@@ -158,7 +158,10 @@ class MineriaTab:
                 return
             label = f"Impurity: {tree_.impurity[node]:.2f}\n"
             if tree_.feature[node] != _tree.TREE_UNDEFINED:
-                label += f"{feature_names[tree_.feature[node]]} <= {tree_.threshold[node]:.2f}\n"
+                if tree_.threshold[node] != 0.5:
+                    label += f"{feature_names[tree_.feature[node]]} <= {tree_.threshold[node]:.2f}\n"
+                else:
+                    label += f"¿{feature_names[tree_.feature[node]]}?\n"
             label += f"samples: {tree_.n_node_samples[node]}\n"
             if tree_.feature[node] == _tree.TREE_UNDEFINED:
                 # leaf
