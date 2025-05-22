@@ -196,15 +196,8 @@ class CargaTab:
                     del PROCESS_DATASET['etl_output']
                 if 'save_output' in PROCESS_DATASET:
                     del PROCESS_DATASET['save_output']
-                if 'decision_tree_output' in PROCESS_DATASET:
-                    del PROCESS_DATASET['decision_tree_output']
-                if 'kmeans_output' in PROCESS_DATASET:
-                    del PROCESS_DATASET['kmeans_output']
-                if os.path.exists('decision_tree.png'):
-                    os.remove('decision_tree.png')
-                if os.path.exists('kmeans.png'):
-                    os.remove('kmeans.png')
-                
+                if 'data_mining_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['data_mining_output']
                 
                 print("Limpiando todos los DataFrames y resultados almacenados")
                 return [], []

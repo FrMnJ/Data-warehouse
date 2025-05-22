@@ -23,14 +23,13 @@ class MineriaTab:
         self.register_callbacks()
 
     def render(self):
-        decision_tree_output = PROCESS_DATASET.get('decision_tree_output', [])
-        kmeans_output = PROCESS_DATASET.get('kmeans_output', [])
+        data_mining_output = PROCESS_DATASET.get('data_mining_output', [])
 
         return html.Div([
             html.H2("Minería de datos",
                     style={'margin': '20px'}),  
-            html.Button('Ejecutar Arbol de decisión',
-                         id='run-decision-tree', 
+            html.Button('Ejecutar Minería de datos',
+                         id='run-data-mining', 
                          n_clicks=0, 
                          style={'margin': '20px',
                                 'background-color': '#4CAF50',
@@ -39,10 +38,10 @@ class MineriaTab:
                                 'padding': '10px 20px',
                                 'text-align': 'center',
                                 'text-decoration': 'none',
-                                'display': 'inline-block' if not decision_tree_output else 'none',
+                                'display': 'inline-block' if not data_mining_output else 'none',
                                 }),
-            html.Button('Limpiar resultados Arbol de decisión',
-                            id='clear-decision-tree-output', 
+            html.Button('Limpiar resultados Minería de datos',
+                            id='clear-data-mining-output', 
                             n_clicks=0, 
                             style={'margin': '20px',
                                     'background-color': '#f44336',
@@ -51,55 +50,19 @@ class MineriaTab:
                                     'padding': '10px 20px',
                                     'text-align': 'center',
                                     'text-decoration': 'none',
-                                    'display': 'none' if not decision_tree_output else 'inline-block',
+                                    'display': 'none' if not data_mining_output else 'inline-block',
                                     }),
             html.Div([
-                html.H3("Resultados del Arbol de decisión", 
-                        style={'margin': '20px 0', 'display': 'none' if not decision_tree_output else 'block'}),
+                html.H3("Resultados de la minería de datos", 
+                        style={'margin': '20px 0', 'display': 'none' if not data_mining_output else 'block'}),
                 dcc.Loading(
-                    id="loading-decision-tree",
+                    id="loading-data-mining",
                     type="circle",
-                    children=html.Div(id='decision-tree-output',
-                                    children=decision_tree_output if decision_tree_output else [html.P("", style={'margin': '20px'})]),
+                    children=html.Div(id='data-mining-output',
+                                    children=data_mining_output if data_mining_output else [html.P("", style={'margin': '20px'})]),
                     style={'margin': '20px'}
                 )
-            ], id='decision-tree-results-container'),
-            
-            html.Button('Ejecutar KMeans',
-                        id='run-kmeans',
-                        n_clicks=0,
-                        style={'margin': '20px',
-                                'background-color': '#4CAF50',
-                                'color': 'white',
-                                'border': 'none',
-                                'padding': '10px 20px',
-                                'text-align': 'center',
-                                'text-decoration': 'none',
-                                'display': 'inline-block' if not kmeans_output else 'none',
-                                }),
-            html.Button('Limpiar resultados KMeans',
-                            id='clear-kmeans-output', 
-                            n_clicks=0, 
-                            style={'margin': '20px',
-                                    'background-color': '#f44336',
-                                    'color': 'white',
-                                    'border': 'none',
-                                    'padding': '10px 20px',
-                                    'text-align': 'center',
-                                    'text-decoration': 'none',
-                                    'display': 'inline-block' if kmeans_output else 'none',
-                                    }),
-            html.Div([
-                html.H3("Resultados del KMeans", 
-                        style={'margin': '20px 0', 'display': 'none' if not kmeans_output else 'block'}),
-                dcc.Loading(
-                    id="loading-kmeans",
-                    type="circle",
-                    children=html.Div(id='kmeans-output',
-                                    children=kmeans_output if kmeans_output else [html.P("", style={'margin': '20px'})]),
-                    style={'margin': '20px'}
-                )
-            ], id='kmeans-results-container'),
+            ], id='data-mining-results-container'),
     ])
 
 
@@ -108,14 +71,17 @@ class MineriaTab:
 
         # Eliminar columnas de tipo datetime
         df = df.drop(columns=df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]', 'datetime64']).columns)
+        df = df.drop(columns=['total_of_special_requests'])
+        assert 'is_demanding_client' in df.columns, "La columna 'is_demanding_client' no existe en el DataFrame."
+        df['is_demanding_client'] = df['is_demanding_client'].astype('int')
 
         # Convertir las variables categoricas a numericas
         # Usando one hot encoding
         df = pd.get_dummies(df)
 
         # Separar las variables predictoras y la variable objetivo
-        X = df.drop('is_canceled', axis=1)
-        y = df['is_canceled']
+        X = df.drop('is_demanding_client', axis=1)
+        y = df['is_demanding_client']
 
         # Dividir el conjunto de datos en conjunto de entrenamiento y conjunto de prueba
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
@@ -167,73 +133,6 @@ class MineriaTab:
                 best_model = result
         return best_model
     
-    def run_kmeans(self, df, n_clusters, max_iter, algorithm, init):
-        features = [
-        "lead_time", "stays_in_weekend_nights", "stays_in_week_nights", 
-        "adults", "children", "babies", "is_repeated_guest", 
-        "days_in_waiting_list", "adr", "required_car_parking_spaces",
-        "total_of_special_requests", "total_guests", "stays_longer_than_7_days",
-        "total_nights"
-        ]
-        
-        df_cluster = df[features].copy()
-
-        df_cluster["stays_longer_than_7_days"] = df_cluster["stays_longer_than_7_days"].astype(int)
-
-        # Normalizamos los datos
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(df_cluster)
-        # Convertir a DataFrame para poder agregar la columna de cluster
-        X_scaled_df = pd.DataFrame(X_scaled, columns=df_cluster.columns, index=df_cluster.index)
-        # Aplicamos el modelo
-        kmeans = KMeans(n_clusters=n_clusters, max_iter=max_iter,
-                         algorithm=algorithm, init=init)
-        kmeans.fit(X_scaled_df)
-        df_cluster['cluster'] = kmeans.labels_
-        return df_cluster, kmeans
-    
-
-    def iterate_kmeans(self, df):
-        # Parámetros a probar
-        n_clusters_options = [2, 3, 4, 5]
-        max_iter_options = [100, 200]
-        algorithm_options = ['lloyd', 'elkan']
-        init_options = ['k-means++', 'random']
-
-        best_result = None
-        best_inertia = float('inf')
-        results = []
-
-        for n_clusters in n_clusters_options:
-            for max_iter in max_iter_options:
-                for algorithm in algorithm_options:
-                    for init in init_options:
-                        try:
-                            df_clustered, kmeans_model = self.run_kmeans(
-                                df, n_clusters, max_iter, algorithm, init
-                            )
-                            inertia = kmeans_model.inertia_
-                            result = {
-                            'model': kmeans_model,
-                            'df_clustered': df_clustered,
-                            'n_clusters': n_clusters,
-                            'max_iter': max_iter,
-                            'algorithm': algorithm,
-                            'init': init,
-                            'inertia': inertia
-                        }
-                            results.append(result)
-
-                            if inertia < best_inertia:
-                                best_inertia = inertia
-                                best_result = result
-                        except Exception as e:
-                            print(f"Error with params: n_clusters={n_clusters}, max_iter={max_iter}, "
-                              f"algorithm={algorithm}, init={init}")
-                            print(e)
-
-        return best_result
-
     def sklearn_tree_to_cytoscape(self, model, feature_names, class_names):
         from sklearn.tree import _tree
         tree_ = model.tree_
@@ -268,16 +167,16 @@ class MineriaTab:
 
     def register_callbacks(self):
         @self.app.callback(
-            Output('decision-tree-output', 'children', allow_duplicate=True),
-            Output('run-decision-tree', 'style', allow_duplicate=True),
-            Output('clear-decision-tree-output', 'style', allow_duplicate=True),
-            Input('run-decision-tree', 'n_clicks'),
-            State('run-decision-tree', 'style'),
-            State('clear-decision-tree-output', 'style'),
+            Output('data-mining-output', 'children', allow_duplicate=True),
+            Output('run-data-mining', 'style', allow_duplicate=True),
+            Output('clear-data-mining-output', 'style', allow_duplicate=True),
+            Input('run-data-mining', 'n_clicks'),
+            State('run-data-mining', 'style'),
+            State('clear-data-mining-output', 'style'),
             prevent_initial_call=True,
         )
-        def run_decision_tree_process(n_clicks, run_style, clear_style):
-            print("Ejecutando el arbol de decisión")
+        def run_data_mining_process(n_clicks, run_style, clear_style):
+            print("Ejecutando la minería de datos")
             if n_clicks is None:
                 print("No se ha hecho clic en el botón")
                 return [html.P("")], dash.no_update, dash.no_update
@@ -297,8 +196,8 @@ class MineriaTab:
             cm = confusion_matrix(model['y_test'], model['y_pred'], labels=[0, 1])
             heatmap = go.Figure(data=go.Heatmap(
                 z=cm,
-                x=['No cancelado', 'Cancelado'],
-                y=['No cancelado', 'Cancelado'],
+                x=['No Exigente', 'Exigente'],
+                y=['No Exigente', 'Exigente'],
                 colorscale='Blues',
                 showscale=True,
                 text=cm,
@@ -324,7 +223,7 @@ class MineriaTab:
             cyto_elements = self.sklearn_tree_to_cytoscape(
                 model['model'],
                 feature_names=list(model['X_train'].columns),
-                class_names=['No cancelado', 'Cancelado']
+                class_names=['No Exigente', 'Exigente']
             )
             children.append(
                 html.H3("Árbol de decisión interactivo", style={'margin': '20px'})
@@ -346,101 +245,23 @@ class MineriaTab:
 
             run_style['display'] = 'none'
             clear_style['display'] = 'inline-block'
-            PROCESS_DATASET['decision_tree_output'] = children
+            PROCESS_DATASET['data_mining_output'] = children
             return children, run_style, clear_style
 
         @self.app.callback(
-            Output('decision-tree-output', 'children', allow_duplicate=True),
-            Output('run-decision-tree', 'style', allow_duplicate=True),
-            Output('clear-decision-tree-output', 'style', allow_duplicate=True),
-            Input('clear-decision-tree-output', 'n_clicks'),
-            State('run-decision-tree', 'style'),
-            State('clear-decision-tree-output', 'style'),
+            Output('data-mining-output', 'children', allow_duplicate=True),
+            Output('run-data-mining', 'style', allow_duplicate=True),
+            Output('clear-data-mining-output', 'style', allow_duplicate=True),
+            Input('clear-data-mining-output', 'n_clicks'),
+            State('run-data-mining', 'style'),
+            State('clear-data-mining-output', 'style'),
             prevent_initial_call=True,
         )
-        def clear_decision_tree_output(n_clicks, run_style, clear_style):
+        def clear_data_mining_output(n_clicks, run_style, clear_style):
             if n_clicks:
-                if 'decision_tree_output' in PROCESS_DATASET:
-                    del PROCESS_DATASET['decision_tree_output']
-                if os.path.exists('decision_tree.png'):
-                    os.remove('decision_tree.png')
+                if 'data_mining_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['data_mining_output']
                 run_style['display'] = 'inline-block'
                 clear_style['display'] = 'none'
                 return [html.P("")], run_style, clear_style
             return dash.no_update, dash.no_update, dash.no_update
-        
-        @self.app.callback(
-            Output('kmeans-output', 'children', allow_duplicate=True),
-            Output('run-kmeans', 'style', allow_duplicate=True),
-            Output('clear-kmeans-output', 'style', allow_duplicate=True),
-            Input('run-kmeans', 'n_clicks'),
-            State('run-kmeans', 'style'),
-            State('clear-kmeans-output', 'style'),
-            prevent_initial_call=True,
-        )
-        def run_kmeans_process(n_clicks, run_style, clear_style):
-            print("Ejecutando el KMeans")
-            if n_clicks is None:
-                print("No se ha hecho clic en el botón")
-                return [html.P("")], dash.no_update, dash.no_update
-
-            if 'processed_data' not in DATAFRAMES:
-                print("No hay datos procesados")
-                return [html.P("No hay datos procesados. Por favor, ejecute el ETL en  la pestaña 'ETL'.", 
-                            style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'})], dash.no_update, dash.no_update
-            
-            processed_df = DATAFRAMES['processed_data'] 
-            print("Iterando sobre parametros del KMeans")
-            model = self.iterate_kmeans(processed_df)
-
-            children = []
-            if model is None:
-                print("No se pudo encontrar un modelo KMeans válido.")
-                children.append(html.P("No se pudo encontrar un modelo KMeans válido. Por favor, revise los datos o los parámetros.", style={'color': 'red', 'fontWeight': 'bold', 'margin': '20px'}))
-                return children, run_style, clear_style
-            print("Mostrando resultados del KMeans")
-            # Mostrar el clustering
-            fig = plt.figure(figsize=(12, 8))
-            sns.scatterplot(data=model['df_clustered'], x='total_of_special_requests', y='adr', hue='cluster', palette='Set1')
-            plt.title('Clustering KMeans')  
-            plt.tight_layout()
-            plt.savefig('kmeans.png')
-            plt.close(fig)
-            import base64
-            with open('kmeans.png', 'rb') as f:
-                img_bytes = f.read()
-            img_b64 = base64.b64encode(img_bytes).decode()
-            img_src = f'data:image/png;base64,{img_b64}'
-            children.append(
-                html.H3("KMeans Clustering", style={'margin': '20px'})
-            )
-            children.append(
-                html.Img(src=img_src, style={'width': '100%', 'height': 'auto'})
-            )
-            
-            run_style['display'] = 'none'
-            clear_style['display'] = 'inline-block'
-            
-            PROCESS_DATASET['kmeans_output'] = children
-            return children, run_style, clear_style
-        
-        @self.app.callback(
-            Output('kmeans-output', 'children', allow_duplicate=True),
-            Output('run-kmeans', 'style', allow_duplicate=True),
-            Output('clear-kmeans-output', 'style', allow_duplicate=True),
-            Input('clear-kmeans-output', 'n_clicks'),
-            State('run-kmeans', 'style'),
-            State('clear-kmeans-output', 'style'),
-            prevent_initial_call=True,
-        )
-        def clear_kmeans_output(n_clicks, run_style, clear_style):
-            if n_clicks:
-                if 'kmeans_output' in PROCESS_DATASET:
-                    del PROCESS_DATASET['kmeans_output']
-                if os.path.exists('kmeans.png'):
-                    os.remove('kmeans.png')
-                run_style['display'] = 'inline-block'
-                clear_style['display'] = 'none'
-                return [html.P("")], run_style, clear_style
-            return dash.no_update, dash.no_update, dash.no_update
-

@@ -511,16 +511,9 @@ class ETLTab:
                     del DATAFRAMES['processed_data']
                 if 'export_options_div' in PROCESS_DATASET:
                     del PROCESS_DATASET['export_options_div']
-                if 'decision_tree_output' in PROCESS_DATASET:
-                    del PROCESS_DATASET['decision_tree_output']
-                if 'kmeans_output' in PROCESS_DATASET:
-                    del PROCESS_DATASET['kmeans_output']
+                if 'data_mining_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['data_mining_output']
 
-                if os.path.exists('decision_tree.png'):
-                    os.remove('decision_tree.png')
-                if os.path.exists('kmeans.png'):
-                    os.remove('kmeans.png')
-                
                 return [html.P("", style={'margin': '20px'})], [], {'display': 'none'}
             
             return dash.no_update, dash.no_update, dash.no_update
@@ -1120,6 +1113,137 @@ class ETLTab:
             element = html.Div([
                 html.H3("Eliminación de filas con total_nights mayores al promedio y menores a 0"),
                 html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+            process_elements.append(element)
+        
+        # is_canceled cambiar a cualitativo
+        if 'is_canceled' in copy_df.columns:
+            copy_df['is_canceled'] = copy_df['is_canceled'].astype('category')
+            element = html.Div([
+                html.H3("Cambio de is_canceled a cualitativo"),
+                html.P(f"Se mantienen {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+            process_elements.append(element)
+        
+        # arrival_date_year cambiar a cualitativo
+        if 'arrival_date_year' in copy_df.columns:
+            copy_df['arrival_date_year'] = copy_df['arrival_date_year'].astype('category')
+            element = html.Div([
+                html.H3("Cambio de arrival_date_year a cualitativo"),
+                html.P(f"Se mantienen {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+            process_elements.append(element)
+        # TODO: arrival_date_year eliminar valores atipicos
+        if 'arrival_date_year' in copy_df.columns:
+            copy_df = copy_df[copy_df['arrival_date_year'].isin([2015, 2016, 2017, 2018])]
+            element = html.Div([
+                html.H3("Eliminación de filas con arrival_date_year fuera del rango 2015-2018"),
+                html.P(f"Se mantienen {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+        # is_repeated_guest cambiar a cualitativo
+        if 'is_repeated_guest' in copy_df.columns:
+            copy_df['is_repeated_guest'] = copy_df['is_repeated_guest'].astype('category')
+            element = html.Div([
+                html.H3("Cambio de is_repeated_guest a cualitativo"),
+                html.P(f"Se mantienen {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+            process_elements.append(element)
+        
+        # total_guests eliminar atipicos
+        if 'total_guests' in copy_df.columns:
+           q1 = copy_df['total_guests'].quantile(0.25)
+           q3 = copy_df['total_guests'].quantile(0.75)
+           iqr = q3 - q1
+           lower_bound = q1 - 1.5 * iqr
+           upper_bound = q3 + 1.5 * iqr
+           len_before = len(copy_df)
+           copy_df = copy_df.query('0 <= total_guests <= @upper_bound')
+           element = html.Div([
+                html.H3("Eliminación de filas con total_guests mayores al promedio y menores a 0"),
+                html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
+                dash_table.DataTable(
+                    data=copy_df.head(5).to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in copy_df.columns],
+                    style_table={'overflowX': 'auto'},
+                    style_cell={'textAlign': 'left'},
+                ),
+                html.Hr(),
+            ])
+           
+        # stay_longer_than_7_days cambiar a cualitativo
+        if 'stays_longer_than_7_days' in copy_df.columns:
+                copy_df['stays_longer_than_7_days'] = copy_df['stays_longer_than_7_days'].astype('category')
+                element = html.Div([
+                     html.H3("Cambio de stays_longer_than_7_days a cualitativo"),
+                     html.P(f"Se mantienen {len(copy_df)} registros."),
+                     dash_table.DataTable(
+                          data=copy_df.head(5).to_dict('records'),
+                          columns=[{"name": i, "id": i} for i in copy_df.columns],
+                          style_table={'overflowX': 'auto'},
+                          style_cell={'textAlign': 'left'},
+                     ),
+                     html.Hr(),
+                ])
+                process_elements.append(element)
+            
+        # total_nights eliminar los que tienen 0 no sirven para el analisis.
+        if 'total_nights' in copy_df.columns:
+                len_before = len(copy_df)
+                copy_df = copy_df[copy_df['total_nights'] > 0]
+                element = html.Div([
+                    html.H3("Eliminación de filas con total_nights igual a 0"),
+                    html.P(f"Se eliminaron {len_before-len(copy_df)} filas. Quedan {len(copy_df)} registros."),
+                    dash_table.DataTable(
+                        data=copy_df.head(5).to_dict('records'),
+                        columns=[{"name": i, "id": i} for i in copy_df.columns],
+                        style_table={'overflowX': 'auto'},
+                        style_cell={'textAlign': 'left'},
+                    ),
+                    html.Hr(),
+                ])
+
+        # agregar columna is_demading_client >= total_of_special_requests 2
+        if 'total_of_special_requests' in copy_df.columns:
+            copy_df['is_demanding_client'] = copy_df['total_of_special_requests'] >= 2
+            copy_df['is_demanding_client'] = copy_df['is_demanding_client'].astype('category')
+            element = html.Div([
+                html.H3("Agregando columna is_demading_client"),
+                html.P(f"Se mantienen {len(copy_df)} registros."),
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
