@@ -81,6 +81,24 @@ class DecisionTab:
                 html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px'}),
                 html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px'})
             ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
+            html.Div([
+                html.H3("Justificación del modelo utilizado"),
+                html.P("Se utilizó un árbol de decisión por su facilidad de interpretación y por permitir visualizar reglas claras para identificar clientes exigentes."),
+                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas.")
+            ]),
+            html.Div([
+                html.H3("Impacto de los clientes exigentes en el negocio"),
+                html.P("Detectar correctamente a los clientes exigentes permite al hotel anticiparse a sus necesidades y mejorar la satisfacción del cliente."),
+                html.P("Un error de tipo falso negativo (no detectar un cliente exigente) puede llevar a una mala experiencia, lo cual impacta en la reputación del hotel, reduce la posibilidad de recomendaciones y afecta el retorno del cliente."),
+                html.P("Es importante maximizar el 'recall' de la clase 'exigente', aunque ello implique tener más falsos positivos.")
+            ]),
+        html.Div([
+            html.H3("Recomendaciones basadas en los hallazgos"),
+                html.Ul([
+                    html.Li("Asignar personal adicional en fechas con alta cantidad de peticiones especiales."),
+                    html.Li("Aplicar medidas de seguimiento especial a los clientes identificados como potencialmente exigentes."),
+                ])
+            ])
         ])
     
     def register_callbacks(self):
