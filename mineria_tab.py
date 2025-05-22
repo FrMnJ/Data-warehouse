@@ -1,16 +1,17 @@
 import os
-from dash import Input, Output, State, dcc, html
+from dash import Input, Output, State, dcc, html, dash_table
 import dash
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, f1_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import plotly.graph_objs as go
 import matplotlib
+from imblearn.over_sampling import SMOTE
 matplotlib.use('Agg')
 import dash_cytoscape as cyto
 
@@ -66,9 +67,28 @@ class MineriaTab:
     ])
 
 
-    def run_decision_tree(self, df, criterion,
+    def run_decision_tree(self, X_resampled, y_resampled, criterion,
                            splitter,max_depth, min_samples_split,  min_samples_leaf):
 
+                # Dividir el conjunto de datos en conjunto de entrenamiento y conjunto de prueba
+        X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2)
+
+        # Entrenar el modelo
+        model = DecisionTreeClassifier(criterion=criterion, 
+                                        splitter=splitter, 
+                                        max_depth=max_depth,
+                                        min_samples_split=min_samples_split, 
+                                        min_samples_leaf=min_samples_leaf,
+                                        class_weight='balanced',
+                                        )
+        model.fit(X_train, y_train)
+        # Evaluar el modelo
+        y_pred = model.predict(X_test)
+        print(classification_report(y_test, y_pred))
+        return  model, X_train, X_test, y_train, y_test, y_pred
+
+    def iterate_decision_tree(self, df):
+        # Definimos X y Y 
         # Eliminar columnas de tipo datetime
         df = df.drop(columns=df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]', 'datetime64']).columns)
         df = df.drop(columns=['total_of_special_requests'])
@@ -83,25 +103,16 @@ class MineriaTab:
         X = df.drop('is_demanding_client', axis=1)
         y = df['is_demanding_client']
 
-        # Dividir el conjunto de datos en conjunto de entrenamiento y conjunto de prueba
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+        # Rebalance con SMOTE
+        smote = SMOTE()
+        X_resampled, y_resampled = smote.fit_resample(X, y)
 
-        # Entrenar el modelo
-        model = DecisionTreeClassifier(criterion=criterion, splitter=splitter, max_depth=max_depth,
-                                        min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf)
-        model.fit(X_train, y_train)
-        # Evaluar el modelo
-        y_pred = model.predict(X_test)
-        print(classification_report(y_test, y_pred))
-        return  model, X_train, X_test, y_train, y_test, y_pred
-
-    def iterate_decision_tree(self, df):
         # Definimos los parametros a usar pre prunning
-        criterion = ['gini', 'entropy']
-        splitter = ['best', 'random']
-        max_depth = [3, 5, 8, 10]
-        min_samples_split = [10, 15, 20, 25]
-        min_samples_leaf = [10, 15, 20]
+        criterion = ['gini']
+        splitter = ['best']   
+        max_depth = [2, 3, 4] 
+        min_samples_split = [20, 30, 40]
+        min_samples_leaf = [10, 20, 30]  
         # Guardamos los resultados de las iteraciones
         results = []
         for sl in min_samples_leaf:
@@ -110,8 +121,8 @@ class MineriaTab:
                     for sp in splitter:
                         for cr in criterion:
                             model, X_train, X_test, y_train, y_test, y_pred = self.run_decision_tree(
-                                df, cr, sp, md, s, sl)
-                            accuracy = model.score(X_test, y_test)
+                                X_resampled, y_resampled, cr, sp, md, s, sl)
+                            f1_score_model = f1_score(y_test, y_pred)
                             results.append({
                                 'model': model,
                                 'X_train': X_train,
@@ -124,13 +135,17 @@ class MineriaTab:
                                 'max_depth': md,
                                 'min_samples_split': s,
                                 'min_samples_leaf': sl,
-                                'accuracy': accuracy
+                                'f1_score': f1_score_model
                             })
         # Iteramos sobre las resultados para obtener el mejor
         best_model = results[0] 
         for result in results:
-            if best_model['accuracy'] < result['accuracy']:
+            if best_model['f1_score'] < result['f1_score']:
                 best_model = result
+        best_report = classification_report(best_model['y_test'], best_model['y_pred'], output_dict=True)
+        print(f"Mejor modelo: ")
+        print(best_report)
+        best_model['report'] = best_report
         return best_model
     
     def sklearn_tree_to_cytoscape(self, model, feature_names, class_names):
@@ -218,7 +233,22 @@ class MineriaTab:
                     style={'margin': '20px'}
                 )
             )
-                        # Mostrar el arbol de decisión
+            # TODO: Mostrar el classification report
+            report = model['report']
+            report_df = pd.DataFrame(report).transpose().round(2).reset_index()
+            report_df.rename(columns={'index': 'Clase'}, inplace=True)   
+
+            element = html.Div([
+                html.H3("Reporte de clasificación", style={'margin': '20px'}),
+                dash_table.DataTable(
+                    data=report_df.to_dict('records'),
+                    columns=[{"name": i, "id": i} for i in report_df.columns],
+                    style_table={'overflowX': 'auto'},
+                )
+            ])
+            children.append(element)
+            
+            # Mostrar el arbol de decisión
             # --- Interactive Cytoscape Tree ---
             cyto_elements = self.sklearn_tree_to_cytoscape(
                 model['model'],
