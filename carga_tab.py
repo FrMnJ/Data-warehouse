@@ -1,3 +1,4 @@
+import os
 from typing import Tuple
 from dash import dcc, html, dash_table, callback, Output, Input, State
 import pandas as pd
@@ -195,8 +196,8 @@ class CargaTab:
                     del PROCESS_DATASET['etl_output']
                 if 'save_output' in PROCESS_DATASET:
                     del PROCESS_DATASET['save_output']
-                if 'mineria_output' in PROCESS_DATASET:
-                    del PROCESS_DATASET['mineria_output']
+                if 'data_mining_output' in PROCESS_DATASET:
+                    del PROCESS_DATASET['data_mining_output']
                 
                 print("Limpiando todos los DataFrames y resultados almacenados")
                 return [], []
