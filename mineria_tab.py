@@ -12,6 +12,7 @@ from sklearn.cluster import KMeans
 import plotly.graph_objs as go
 import matplotlib
 matplotlib.use('Agg')
+import dash_cytoscape as cyto
 
 from info_compartida import DATAFRAMES, PROCESS_DATASET
 
@@ -233,6 +234,38 @@ class MineriaTab:
 
         return best_result
 
+    def sklearn_tree_to_cytoscape(self, model, feature_names, class_names):
+        from sklearn.tree import _tree
+        tree_ = model.tree_
+        nodes = []
+        edges = []
+        def recurse(node, parent=None):
+            if node == _tree.TREE_LEAF:
+                return
+            label = f"Ginni: {tree_.impurity[node]:.2f}\n"
+            if tree_.feature[node] != _tree.TREE_UNDEFINED:
+                label += f"{feature_names[tree_.feature[node]]} <= {tree_.threshold[node]:.2f}\n"
+            label += f"samples: {tree_.n_node_samples[node]}\n"
+            if tree_.feature[node] == _tree.TREE_UNDEFINED:
+                # leaf
+                value = tree_.value[node][0]
+                class_idx = value.argmax()
+                label += f"Clase: {class_names[class_idx]}\n"
+            nodes.append({
+                'data': {'id': str(node), 'label': label},
+                'classes': 'leaf' if tree_.feature[node] == _tree.TREE_UNDEFINED else 'split'
+            })
+            if parent is not None:
+                edges.append({'data': {'source': str(parent), 'target': str(node)}})
+            left = tree_.children_left[node]
+            right = tree_.children_right[node]
+            if left != _tree.TREE_LEAF:
+                recurse(left, node)
+            if right != _tree.TREE_LEAF:
+                recurse(right, node)
+        recurse(0)
+        return nodes + edges
+
     def register_callbacks(self):
         @self.app.callback(
             Output('decision-tree-output', 'children', allow_duplicate=True),
@@ -286,40 +319,31 @@ class MineriaTab:
                     style={'margin': '20px'}
                 )
             )
-            n_nodes = model['model'].tree_.node_count
-            max_depth = model['model'].tree_.max_depth
-
-            # Ajuste dinámico del tamaño de la figura
-            width = max(40, min(200, n_nodes // 2))  
-            height = max(15, min(80, max_depth * 4))
-            plot_max_depth = max_depth if max_depth <= 6 else 4
-            fig, ax = plt.subplots(figsize=(width, height))
-            plot_tree(
+                        # Mostrar el arbol de decisión
+            # --- Interactive Cytoscape Tree ---
+            cyto_elements = self.sklearn_tree_to_cytoscape(
                 model['model'],
-                feature_names=model['X_train'].columns,
-                filled=True,
-                ax=ax,
-                max_depth=plot_max_depth,
-                fontsize=18,  # Fuente más grande
-                class_names=['No cancelado', 'Cancelado'],
-                proportion=True,
-                precision=2
-            )
-            plt.title('Árbol de decisión')  
-            plt.tight_layout(rect=[0, 0, 1, 0.98])  # Deja más espacio arriba y abajo
-            plt.savefig('decision_tree.png', bbox_inches='tight')  # Ajusta los bordes
-            plt.close(fig)
-            import base64
-            with open('decision_tree.png', 'rb') as f:
-                img_bytes = f.read()
-            img_b64 = base64.b64encode(img_bytes).decode()
-            img_src = f'data:image/png;base64,{img_b64}'
-            children.append(
-                html.H3("Árbol de decisión", style={'margin': '20px'})
+                feature_names=list(model['X_train'].columns),
+                class_names=['No cancelado', 'Cancelado']
             )
             children.append(
-                html.Img(src=img_src, style={'width': '100%', 'height': 'auto'})
+                html.H3("Árbol de decisión interactivo", style={'margin': '20px'})
             )
+            children.append(
+                cyto.Cytoscape(
+                    id='cytoscape-decision-tree',
+                    elements=cyto_elements,
+                    layout={'name': 'breadthfirst', 'directed': True, 'padding': 10, 'spacingFactor': 2},
+                    style={'width': '100%', 'height': '700px', 'background': '#f9f9f9'},
+                    stylesheet=[
+                        {'selector': 'node', 'style': {'label': 'data(label)', 'font-size': '16px', 'text-wrap': 'wrap', 'text-max-width': 120}},
+                        {'selector': '.leaf', 'style': {'background-color': '#4CAF50'}},
+                        {'selector': '.split', 'style': {'background-color': '#2196F3'}},
+                        {'selector': 'edge', 'style': {'width': 2, 'line-color': '#888'}}
+                    ]
+                )
+            )
+
             run_style['display'] = 'none'
             clear_style['display'] = 'inline-block'
             PROCESS_DATASET['decision_tree_output'] = children
