@@ -130,12 +130,12 @@ class MineriaTab:
         return  model, X_train, X_test, y_train, y_test, y_pred
 
     def iterate_decision_tree(self, df):
-        # Definimos los parametros a usar
+        # Definimos los parametros a usar pre prunning
         criterion = ['gini', 'entropy']
         splitter = ['best', 'random']
-        max_depth = [None, 5, 10, 15]
-        min_samples_split = [2, 5, 10]
-        min_samples_leaf = [1, 2, 4]
+        max_depth = [3, 5, 8, 10]
+        min_samples_split = [10, 15, 20, 25]
+        min_samples_leaf = [10, 15, 20]
         # Guardamos los resultados de las iteraciones
         results = []
         for sl in min_samples_leaf:
