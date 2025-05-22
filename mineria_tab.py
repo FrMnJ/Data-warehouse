@@ -219,12 +219,11 @@ class MineriaTab:
                 texttemplate="%{text}"
             ))
             heatmap.update_layout(
-                title='Matriz de confusión',
                 xaxis_title='Predicción',
                 yaxis_title='Realidad',
             )
             children.append(
-                html.H3("Matriz de confusión", style={'margin': '20px'})
+                html.H3("Matriz de confusión clasificación de is_demanding_client", style={'margin': '20px'})
             )
             children.append(
                 dcc.Graph(
@@ -244,7 +243,23 @@ class MineriaTab:
                     data=report_df.to_dict('records'),
                     columns=[{"name": i, "id": i} for i in report_df.columns],
                     style_table={'overflowX': 'auto'},
-                )
+                ),
+                html.Div([
+                    html.H4("Explicación de métricas de clasificación"),
+                    html.P("📌 Accuracy (Exactitud): es la proporción de todas las clasificaciones correctas, ya sean positivas o negativas."),
+                    html.P("📌 Precision (Precisión): es la proporción de todas las clasificaciones positivas del modelo que realmente son positivas."),
+                    html.P("📌 Recall (Sensibilidad): mide qué proporción de los casos positivos reales fueron correctamente identificados por el modelo."),
+                    html.P("📌 F1-Score: es la media armónica entre precision y recall. Es útil cuando necesitas un balance entre ambos, especialmente con clases desbalanceadas."),
+                    html.P("📌 Support: es la cantidad de ejemplos reales de cada clase en los datos de prueba."), 
+                    html.P("En nuestro caso, es necesario que el modelo tenga un alto recall para la clase 'Exigente', ya que no identificar correctamente a estos clientes podría afectar negativamente al negocio. A continuación se explican algunas de las consecuencias de cometer falsos negativos:"),
+                    html.Ul([
+                        html.Li("Malas reseñas o quejas"),
+                        html.Li("Insatisfacción del cliente"),
+                        html.Li("Perdida de clientes frecuentes o valiosos"),
+                        html.Li("Daño a la reputación de la empresa"),
+                    ]),
+                    html.P("Preferimos que el modelo clasifique como Exigente a un cliente que no lo es (falso positivo) antes que clasificar como No Exigente a un cliente que sí lo es (falso negativo). Esto se debe a que los falsos positivos pueden ser manejados con atención al cliente, mientras que los falsos negativos pueden llevar a consecuencias más graves."),
+                ])
             ])
             children.append(element)
             
