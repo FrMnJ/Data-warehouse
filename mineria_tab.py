@@ -242,7 +242,7 @@ class MineriaTab:
         def recurse(node, parent=None):
             if node == _tree.TREE_LEAF:
                 return
-            label = f"Ginni: {tree_.impurity[node]:.2f}\n"
+            label = f"Impurity: {tree_.impurity[node]:.2f}\n"
             if tree_.feature[node] != _tree.TREE_UNDEFINED:
                 label += f"{feature_names[tree_.feature[node]]} <= {tree_.threshold[node]:.2f}\n"
             label += f"samples: {tree_.n_node_samples[node]}\n"
