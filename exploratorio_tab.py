@@ -58,6 +58,8 @@ class ExploratorioTab:
                 return html.P("No hay datos disponibles para la columna seleccionada."), px.scatter(), px.box(), ""
 
             col_data = df[column].dropna()
+            if col_data.empty:
+                return html.P("No hay datos disponibles para la columna seleccionada."), px.scatter(), px.box(), ""
             if pd.api.types.is_numeric_dtype(col_data):
                 desc = col_data.describe().round(2)
                 translation = {

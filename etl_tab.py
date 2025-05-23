@@ -15,7 +15,8 @@ from io import StringIO
 class ETLTab:
     def __init__(self, app):
         self.app = app
-        self.register_callbacks()
+        if self.app:
+            self.register_callbacks()
 
     def render(self):
         # Verificar si hay resultados almacenados para mostrar

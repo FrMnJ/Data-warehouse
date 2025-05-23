@@ -16,7 +16,7 @@ decision_tab = None
 app = Dash(name="Data warehouse",suppress_callback_exceptions=True)
 
 # App layout
-app.layout = [
+app.layout = html.Div([
     dcc.Tabs(
         id='tabs',
         value='carga',
@@ -127,7 +127,7 @@ app.layout = [
         ]
     ),
     html.Div(id='tabs-content'),
-]
+])
 
 
 @callback(
