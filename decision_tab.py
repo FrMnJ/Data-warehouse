@@ -29,46 +29,78 @@ class DecisionTab:
             reserved_room_type_demands = df.groupby('reserved_room_type')['total_of_special_requests'].sum().reset_index()
             assigned_room_type_demands = df.groupby('assigned_room_type')['total_of_special_requests'].sum().reset_index()
             deposit_type_demands = df.groupby('deposit_type')['total_of_special_requests'].sum().reset_index()
-            agent_demands = df.groupby('agent')['total_of_special_requests'].sum().reset_index()
-            company_demands = df.groupby('company')['total_of_special_requests'].sum().reset_index()
             customer_type_demands = df.groupby('customer_type')['total_of_special_requests'].sum().reset_index()
+            special_counts = df['total_of_special_requests'].apply(lambda x: str(x) if x < 3 else '3+').value_counts().sort_index()
             # Grafica de frecuencia de peticiones especiales por hotel
-            
-            return html.Div([
+        return html.Div([
             html.H2("Toma de decisiones",
                     style={'margin': '20px'}),  
             # Grafica de pastel de clientes que hace petciones especiales
+            html.H3("🎯 Objetivo de la Toma de Decisiones"),
+            html.P("Ayudar al hotel a optimizar sus recursos y mejorar la experiencia del cliente, anticipando solicitudes especiales y detectando clientes especiales antes de su llegada."),
+            html.P("Las peticiones especiales son un indicador de las necesidades de los clientes y pueden influir en la satisfacción del cliente."),
+            html.H3("📊 Visualizaciones clave para la toma de decisiones"),
             html.Div([
                 dcc.Graph(
-                id='special-requests-pie-chart',
-                figure={
-                    'data': [
-                        {
-                            'labels': client_demading_counts.index,
-                            'values': client_demading_counts.values,
-                            'type': 'pie',
-                            'name': 'Clientes demandantes',
-                            'hoverinfo': 'label+percent+name',
-                            'textinfo': 'percent',
-                            'textfont_size': 20,
-                            'marker': {'line': {'width': 2, 'color': '#ffffff'}}
+                    id='special-requests-pie-chart',
+                    figure={
+                        'data': [
+                            {
+                                'labels': client_demading_counts.index,
+                                'values': client_demading_counts.values,
+                                'type': 'pie',
+                                'name': 'Clientes demandantes',
+                                'hoverinfo': 'label+percent+name',
+                                'textinfo': 'percent',
+                                'textfont_size': 20,
+                                'marker': {'line': {'width': 2, 'color': '#ffffff'}}
+                            }
+                        ],
+                        'layout': {
+                            'title': {
+                                'text': "Clientes que hacen peticiones especiales",
+                                'font_size': 24
+                            },
+                            'showlegend': True,
+                            'height': 400,
+                            'width': 600
                         }
-                    ],
-                    'layout': {
+                    }
+                ),
+                html.P("Esta gráfica muestra la proporción de clientes que hacen peticiones especiales en comparación con aquellos que no lo hacen.", style={'margin-top': '10px'}),
+                html.P("Esta información resulta útil para entender la magnitud del fenómeno y su impacto en la operación del hotel."),
+            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
+            # Grafica de pastel de frecuencias de peticiones especiales
+            html.Div([
+                dcc.Graph(
+                    id='requests-distribution-pie',
+                    figure={
+                        'data': [
+                            {
+                                'labels': special_counts.index,
+                                'values': special_counts.values,
+                                'type': 'pie',
+                                'name': 'Distribución de peticiones',
+                                'hoverinfo': 'label+percent+name',
+                                'textinfo': 'percent',
+                                'textfont_size': 20,
+                                'marker': {'line': {'width': 2, 'color': '#ffffff'}}
+                            }
+                        ],
+                        'layout': {
                         'title': {
-                            'text': "Clientes que hacen peticiones especiales",
+                            'text': "Distribución de peticiones especiales por cliente (0, 1, 2, 3+)",
                             'font_size': 24
                         },
                         'showlegend': True,
                         'height': 400,
                         'width': 600
                     }
-                    }
-                ),
-                html.P("Esta gráfica muestra la proporción de clientes que hacen peticiones especiales en comparación con aquellos que no lo hacen.", style={'margin-top': '10px'}),
-                html.P("Esta información resulta útil para entender la magnitud del fenómeno y su impacto en la operación del hotel."),
-                html.P("En este caso, el 44.8% de los clientes hacen peticiones especiales, lo que indica que es un fenómeno significativo y debe ser considerado en la toma de decisiones.", style={'margin-top': '10px'}),
-            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
+                }
+            ),
+                html.P("Esta gráfica muestra la distribución de peticiones especiales por cliente, categorizadas en 0, 1, 2 y 3+ o más peticiones especiales.", style={'margin-top': '10px'}),
+                html.P("Esta información es útil para entender la frecuencia de las peticiones especiales y su impacto en la operación del hotel."),
+            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'margin-top': '20px'} ),
             # Grafica de peticiones especiales por hotel
             html.Div([
                 dcc.Graph(
@@ -244,63 +276,6 @@ class DecisionTab:
                 html.P("Esta gráfica muestra el total de peticiones especiales por tipo de depósito."),
                 html.P("Esta información es útil para identificar qué tipo de depósito tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
             ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de peticiones especiales por agente
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-agent-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': agent_demands['agent'],
-                                'y': agent_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por agente',
-                                'marker': {'color': '#e83e8c'}
-                            }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por agente",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Agente'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
-                        }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por agente."),
-                html.P("Esta información es útil para identificar qué agente tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),       
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-company-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': company_demands['company'],
-                                'y': company_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por empresa',
-                                'marker': {'color': '#fd7e14'}
-                            }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por empresa",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Empresa'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
-                        }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por empresa."),
-                html.P("Esta información es útil para identificar qué empresa tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
             # Tipo de cliente
             html.Div([
                 dcc.Graph(
@@ -348,11 +323,13 @@ class DecisionTab:
                 dcc.Graph(id='special-requests-graph', style={'height': '400px', 'width': '100%', 'margin-top': '20px'}), 
                 html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px'}),
                 html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px'})
-            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
+            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'margin-top': '15px'} ),
             html.Div([
                 html.H3("Justificación del modelo utilizado"),
                 html.P("Se utilizó un árbol de decisión por su facilidad de interpretación y por permitir visualizar reglas claras para identificar clientes exigentes."),
-                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas.")
+                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas."),
+                html.P("También se utilizó un modelo de Regresión Lineal para cuantificar el número de peticiones especiales esperadas en función de las características del cliente."),
+                html.P("Ambos modelos permitirán al hotel anticiparse a las necesidades de los clientes y mejorar la experiencia del cliente."),
             ]),
             html.Div([
                 html.H3("Impacto de los clientes exigentes en el negocio"),
@@ -360,14 +337,16 @@ class DecisionTab:
                 html.P("Un error de tipo falso negativo (no detectar un cliente exigente) puede llevar a una mala experiencia, lo cual impacta en la reputación del hotel, reduce la posibilidad de recomendaciones y afecta el retorno del cliente."),
                 html.P("Es importante maximizar el 'recall' de la clase 'exigente', aunque ello implique tener más falsos positivos.")
             ]),
-        html.Div([
-            html.H3("Recomendaciones basadas en los hallazgos"),
+            html.Div([
+                html.H3("Recomendaciones basadas en los hallazgos"),
                 html.Ul([
+                    html.Li("Ajustar el personal en hoteles con más peticiones especiales."),
                     html.Li("Asignar personal adicional en fechas con alta cantidad de peticiones especiales."),
                     html.Li("Aplicar medidas de seguimiento especial a los clientes identificados como potencialmente exigentes."),
+                    html.Li("Ajustar la oferta de servicios y recursos en función de los segmentos de mercado con más peticiones especiales."),
                 ])
             ])
-        ])
+        ], style={'padding': '20px', 'margin': '20px'})
     
     def register_callbacks(self):
         @self.app.callback(
