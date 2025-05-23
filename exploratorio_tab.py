@@ -34,7 +34,8 @@ class ExploratorioTab:
                         'fontSize': '16px',
                         'borderRadius': '6px',
                         'border': '1px solid #bdbdbd',
-                        'padding': '6px',
+                        'padding': '4px 6px',         
+                        'minHeight': '32px',
                         'backgroundColor': '#f8f9fa',
                         'color': '#222',
                         'boxShadow': '0 2px 5px rgba(0,0,0,0.04)'
@@ -48,12 +49,25 @@ class ExploratorioTab:
 
             html.Div(id='eda-stats-output', style={'margin': '20px'}),
 
-            html.Div([
-                dcc.Graph(id='histogram-graph'),
-                dcc.Graph(id='boxplot-graph')
-            ], style={'margin': '20px'}),
-
             html.Div(id='eda-explanation', style={'margin': '20px', 'fontStyle': 'italic', 'color': '#333'}),
+
+            html.Div([
+                html.Div([
+                    dcc.Graph(id='histogram-graph', style={'height': '350px', 'width': '100%'})
+                ], style={'flex': '1', 'marginRight': '10px'}),
+                html.Div([
+                    dcc.Graph(id='boxplot-graph', style={'height': '350px', 'width': '100%'})
+                ], style={'flex': '1', 'marginLeft': '10px'}),
+            ], style={
+                'display': 'flex',
+                'flexDirection': 'row',
+                'justifyContent': 'center',
+                'alignItems': 'stretch',
+                'margin': '20px 0 30px 0',
+                'gap': '20px',
+                'width': '100%'
+            }),
+            
         ], style={'maxWidth': '1100px', 'margin': 'auto', 'fontFamily': 'Segoe UI, Arial, sans-serif'})
 
     def register_callbacks(self):
@@ -99,18 +113,8 @@ class ExploratorioTab:
                     "max": "Máximo"
                 }
 
-                stats_table = html.Table([
-                    html.Thead(html.Tr([html.Th("Estadística"), html.Th("Valor")]))
-                ] + [
-                    html.Tr([html.Td(translation.get(str(index), str(index))), html.Td(str(value))])
-                    for index, value in desc.items()
-                ], style={"width": "300px", "borderCollapse": "collapse", "border": "1px solid #ccc"})
-
-                fig_hist = px.histogram(df, x=column, nbins=30, title=f"Histograma de {column}", color_discrete_sequence=['#636efa'])
-                fig_box = px.box(df, y=column, title=f"Boxplot de {column}", color_discrete_sequence=['#636efa'])
-
                 explanation = html.Div([
-                    html.H4("📊 Explicación automática del análisis:", style={'marginTop': '30px'}),
+                    html.H3("📊 Explicación automática del análisis:"),
                     html.P(f"La media de '{column}' es {desc['mean']}, y su mediana es {desc['50%']}. Esto sugiere que la distribución es "
                         f"{'simétrica' if abs(desc['mean'] - desc['50%']) < desc['std'] * 0.1 else 'asimétrica'}."),
 
@@ -119,23 +123,69 @@ class ExploratorioTab:
 
                     html.P(f"Se detectaron valores mínimos y máximos de {desc['min']} a {desc['max']}, "
                         f"{'con presencia de posibles outliers.' if (desc['min'] < desc['25%'] - 1.5 * (desc['75%'] - desc['25%']) or desc['max'] > desc['75%'] + 1.5 * (desc['75%'] - desc['25%'])) else 'sin valores atípicos destacados.'}")
+                ], style={'margin': '30px', 'fontSize': '16px', 'color': '#333'})
+
+                stats_table = html.Table([
+                html.Thead(
+                    html.Tr([
+                        html.Th("Estadística", style={'backgroundColor': '#e3e3e3', 'fontWeight': 'bold', 'fontSize': '16px', 'textAlign': 'center', 'padding': '8px'}),
+                        html.Th("Valor", style={'backgroundColor': '#e3e3e3', 'fontWeight': 'bold', 'fontSize': '16px', 'textAlign': 'center', 'padding': '8px'})
+                    ])
+                ),
+                html.Tbody([
+                    html.Tr([
+                        html.Td(translation.get(str(index), str(index)), style={'textAlign': 'center', 'padding': '8px', 'fontSize': '15px', 'backgroundColor': '#fcfcfc' if i % 2 == 0 else '#f5f7fa'}),
+                        html.Td(str(value), style={'textAlign': 'center', 'padding': '8px', 'fontSize': '15px', 'backgroundColor': '#fcfcfc' if i % 2 == 0 else '#f5f7fa'})
+                    ]) for i, (index, value) in enumerate(desc.items())
                 ])
+            ], style={
+                "width": "340px",
+                "margin": "20px auto",
+                "borderCollapse": "collapse",
+                "border": "1px solid #ccc",
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 8px rgba(0,0,0,0.07)",
+                "fontFamily": "Segoe UI, Arial, sans-serif"
+            })
+
+                fig_hist = px.histogram(df, x=column, nbins=30, title=f"Histograma de {column}", color_discrete_sequence=['#636efa'])
+                fig_box = px.box(df, y=column, title=f"Boxplot de {column}", color_discrete_sequence=['#636efa'])
+
+                
                 return stats_table, fig_hist, fig_box, explanation
             else:
                 value_counts = col_data.value_counts().reset_index()
                 value_counts.columns = [column, 'count']
 
+                explanation = html.Div([
+                    html.H3("📊 Frecuencia de categorías:"),
+                    html.P(f"Se detectaron {value_counts.shape[0]} valores únicos para la columna '{column}'."),
+                    html.P("El gráfico muestra la distribución de frecuencias.")
+                ], style={'margin': '30px', 'fontSize': '16px', 'color': '#333'})
+
                 fig = px.bar(value_counts, x=column, y='count', title=f"Frecuencia de {column}", color_discrete_sequence=['#636efa'])
 
                 table = html.Table([
-                    html.Thead(html.Tr([html.Th(column), html.Th("Frecuencia")])),
-                    html.Tbody([html.Tr([html.Td(row[column]), html.Td(row['count'])]) for _, row in value_counts.iterrows()])
-                ], style={"borderCollapse": "collapse", "border": "1px solid #ccc"})
-
-                explanation = html.Div([
-                    html.H4("📊 Frecuencia de categorías:", style={'marginTop': '30px'}),
-                    html.P(f"Se detectaron {value_counts.shape[0]} valores únicos para la columna '{column}'."),
-                    html.P("El gráfico muestra la distribución de frecuencias.")
-                ])
+                    html.Thead(
+                        html.Tr([
+                            html.Th(column, style={'backgroundColor': '#e3e3e3', 'fontWeight': 'bold', 'fontSize': '16px', 'textAlign': 'center', 'padding': '8px'}),
+                            html.Th("Frecuencia", style={'backgroundColor': '#e3e3e3', 'fontWeight': 'bold', 'fontSize': '16px', 'textAlign': 'center', 'padding': '8px'})
+                        ])
+                    ),
+                    html.Tbody([
+                        html.Tr([
+                            html.Td(row[column], style={'textAlign': 'center', 'padding': '8px', 'fontSize': '15px', 'backgroundColor': '#fcfcfc' if i % 2 == 0 else '#f5f7fa'}),
+                            html.Td(row['count'], style={'textAlign': 'center', 'padding': '8px', 'fontSize': '15px', 'backgroundColor': '#fcfcfc' if i % 2 == 0 else '#f5f7fa'})
+                        ]) for i, (_, row) in enumerate(value_counts.iterrows())
+                    ])
+                ], style={
+                    "borderCollapse": "collapse",
+                    "border": "1px solid #ccc",
+                    "margin": "20px auto",
+                    "width": "60%",
+                    "borderRadius": "8px",
+                    "boxShadow": "0 2px 8px rgba(0,0,0,0.07)",
+                    "fontFamily": "Segoe UI, Arial, sans-serif"
+                })
 
                 return table, fig, px.box(), explanation
