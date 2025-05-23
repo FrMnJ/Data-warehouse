@@ -88,7 +88,8 @@ class ETLTab:
                         'fontWeight': 'bold',
                         'fontSize': '15px',
                         'marginRight': '10px',
-                        'color': '#222'
+                        'color': '#222',
+                        'margin': '0 0 10px 0'
                     }),
                     dcc.RadioItems(
                         id='export-format',
@@ -234,7 +235,9 @@ class ETLTab:
             style={
                 **export_options_div,
                 'maxWidth': '600px',
-                'height': '100px',
+                'minWidth': '340px',         # <-- Añade esto para un ancho mínimo
+                'width': '100%',
+                'height': 'auto',
                 'margin': '20px auto',
                 'padding': '12px 20px',
                 'backgroundColor': '#f9f9f9',
@@ -257,7 +260,7 @@ class ETLTab:
                     style={'margin': '20px'}
                 )
             ], id='etl-results-container'),
-        ], style={'maxWidth': '1100px', 'margin': 'auto', 'fontFamily': 'Segoe UI, Arial, sans-serif'})
+        ], style={'maxWidth': '1100px', 'margin': 'auto','height': 'auto', 'fontFamily': 'Segoe UI, Arial, sans-serif'})
 
     def register_callbacks(self):
         @self.app.callback(
