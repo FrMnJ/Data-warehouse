@@ -32,11 +32,11 @@ class DecisionTab:
             customer_type_demands = df.groupby('customer_type')['total_of_special_requests'].sum().reset_index()
             special_counts = df['total_of_special_requests'].apply(lambda x: str(x) if x < 3 else '3+').value_counts().sort_index()
         return html.Div([
-            html.H2("Toma de decisiones", style={'margin': '20px'}),
-            html.H3("🎯 Objetivo de la Toma de Decisiones"),
-            html.P("Ayudar al hotel a optimizar sus recursos y mejorar la experiencia del cliente, anticipando solicitudes especiales y detectando clientes especiales antes de su llegada."),
-            html.P("Las peticiones especiales son un indicador de las necesidades de los clientes y pueden influir en la satisfacción del cliente."),
-            html.H3("📊 Visualizaciones clave para la toma de decisiones"),
+            html.H2("Toma de decisiones", style={'margin': '20px', 'color': '#2c3e50', 'fontWeight': 'bold', 'fontSize': '2.2rem', 'letterSpacing': '1px'}),
+            html.H3("🎯 Objetivo de la Toma de Decisiones", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
+            html.P("Ayudar al hotel a optimizar sus recursos y mejorar la experiencia del cliente, anticipando solicitudes especiales y detectando clientes especiales antes de su llegada.", style={'background': '#eaf4fb', 'padding': '10px', 'borderRadius': '6px', 'marginBottom': '8px'}),
+            html.P("Las peticiones especiales son un indicador de las necesidades de los clientes y pueden influir en la satisfacción del cliente.", style={'background': '#eaf4fb', 'padding': '10px', 'borderRadius': '6px', 'marginBottom': '18px'}),
+            html.H3("📊 Visualizaciones clave para la toma de decisiones", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
             html.Div([
                 html.Div([
                     # Pie chart: Clientes demandantes
@@ -287,7 +287,7 @@ class DecisionTab:
             # --- End of two-column grid ---
             # Full-width: Graph by day
             html.Div([
-                html.H3("Grafica de peticiones especiales por día"),
+                html.H3("Grafica de peticiones especiales por día", style={'color': '#007bff', 'fontWeight': 'bold', 'marginBottom': '10px'}),
                 html.Div([
                     html.Label("Selecciona una fecha de inicio:", style={'margin-right': '10px', 'font-weight': 'bold'}),
                     dcc.DatePickerSingle(
@@ -305,30 +305,30 @@ class DecisionTab:
                     ),
                 ], style={'display': 'flex', 'flexDirection': 'row', 'alignItems': 'center', 'gap': '10px', 'margin-bottom': '10px'}),
                 dcc.Graph(id='special-requests-graph', style={'height': '400px', 'width': '100%', 'margin-top': '20px'}), 
-                html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px'}),
-                html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px'})
+                html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px', 'color': '#555', 'fontStyle': 'italic'}),
+                html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px', 'color': '#555', 'fontStyle': 'italic'})
             ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'margin-top': '15px'} ),
             html.Div([
-                html.H3("Justificación del modelo utilizado"),
-                html.P("Se utilizó un árbol de decisión por su facilidad de interpretación y por permitir visualizar reglas claras para identificar clientes exigentes."),
-                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas."),
-                html.P("También se utilizó un modelo de Regresión Lineal para cuantificar el número de peticiones especiales esperadas en función de las características del cliente."),
-                html.P("Ambos modelos permitirán al hotel anticiparse a las necesidades de los clientes y mejorar la experiencia del cliente."),
+                html.H3("Justificación del modelo utilizado", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
+                html.P("Se utilizó un árbol de decisión por su facilidad de interpretación y por permitir visualizar reglas claras para identificar clientes exigentes.", style={'background': '#f6f8fa', 'padding': '8px', 'borderLeft': '4px solid #007bff', 'marginBottom': '6px'}),
+                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas.", style={'background': '#f6f8fa', 'padding': '8px', 'borderLeft': '4px solid #007bff', 'marginBottom': '6px'}),
+                html.P("También se utilizó un modelo de Regresión Lineal para cuantificar el número de peticiones especiales esperadas en función de las características del cliente.", style={'background': '#f6f8fa', 'padding': '8px', 'borderLeft': '4px solid #007bff', 'marginBottom': '6px'}),
+                html.P("Ambos modelos permitirán al hotel anticiparse a las necesidades de los clientes y mejorar la experiencia del cliente.", style={'background': '#f6f8fa', 'padding': '8px', 'borderLeft': '4px solid #007bff', 'marginBottom': '6px'}),
             ]),
             html.Div([
-                html.H3("Impacto de los clientes exigentes en el negocio"),
-                html.P("Detectar correctamente a los clientes exigentes permite al hotel anticiparse a sus necesidades y mejorar la satisfacción del cliente."),
-                html.P("Un error de tipo falso negativo (no detectar un cliente exigente) puede llevar a una mala experiencia, lo cual impacta en la reputación del hotel, reduce la posibilidad de recomendaciones y afecta el retorno del cliente."),
-                html.P("Es importante maximizar el 'recall' de la clase 'exigente', aunque ello implique tener más falsos positivos.")
+                html.H3("Impacto de los clientes exigentes en el negocio", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
+                html.P("Detectar correctamente a los clientes exigentes permite al hotel anticiparse a sus necesidades y mejorar la satisfacción del cliente.", style={'background': '#fffbe6', 'padding': '8px', 'borderLeft': '4px solid #ffc107', 'marginBottom': '6px'}),
+                html.P("Un error de tipo falso negativo (no detectar un cliente exigente) puede llevar a una mala experiencia, lo cual impacta en la reputación del hotel, reduce la posibilidad de recomendaciones y afecta el retorno del cliente.", style={'background': '#fffbe6', 'padding': '8px', 'borderLeft': '4px solid #ffc107', 'marginBottom': '6px'}),
+                html.P("Es importante maximizar el 'recall' de la clase 'exigente', aunque ello implique tener más falsos positivos.", style={'background': '#fffbe6', 'padding': '8px', 'borderLeft': '4px solid #ffc107', 'marginBottom': '6px'})
             ]),
             html.Div([
-                html.H3("Recomendaciones basadas en los hallazgos"),
+                html.H3("Recomendaciones basadas en los hallazgos", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
                 html.Ul([
-                    html.Li("Ajustar el personal en hoteles con más peticiones especiales."),
-                    html.Li("Asignar personal adicional en fechas con alta cantidad de peticiones especiales."),
-                    html.Li("Aplicar medidas de seguimiento especial a los clientes identificados como potencialmente exigentes."),
-                    html.Li("Ajustar la oferta de servicios y recursos en función de los segmentos de mercado con más peticiones especiales."),
-                ])
+                    html.Li("Ajustar el personal en hoteles con más peticiones especiales.", style={'marginBottom': '6px', 'fontWeight': 'bold', 'color': '#2c3e50'}),
+                    html.Li("Asignar personal adicional en fechas con alta cantidad de peticiones especiales.", style={'marginBottom': '6px', 'fontWeight': 'bold', 'color': '#2c3e50'}),
+                    html.Li("Aplicar medidas de seguimiento especial a los clientes identificados como potencialmente exigentes.", style={'marginBottom': '6px', 'fontWeight': 'bold', 'color': '#2c3e50'}),
+                    html.Li("Ajustar la oferta de servicios y recursos en función de los segmentos de mercado con más peticiones especiales.", style={'marginBottom': '6px', 'fontWeight': 'bold', 'color': '#2c3e50'}),
+                ], style={'paddingLeft': '20px'})
             ])
         ], style={'padding': '20px', 'margin': '20px'})
     
