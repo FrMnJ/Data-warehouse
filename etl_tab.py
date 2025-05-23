@@ -25,43 +25,71 @@ class ETLTab:
         export_options_div = PROCESS_DATASET.get('export_options_div', {'display': 'none'})
         
         return html.Div([
-            html.H2("ETL", style={'margin': '20px'}),
+            html.H2("ETL", style={
+                'margin': '20px',
+                'color': '#333',
+                'fontWeight': 'bold',
+                'letterSpacing': '1px'
+            }),
             
             # Botón de inicio del proceso ETL (solo procesamiento)
             html.Button(
                 'Iniciar Proceso ETL',
                 id='start-etl-button',
-                style={'margin': '20px',
-                    'backgroundColor': "#007bff",
+                style={
+                    'margin': '20px',
+                    'backgroundColor': "#0077b6",
                     'color': 'white',
                     'border': 'none',
-                    'borderRadius': '5px',
-                    'padding': '10px 20px',
+                    'padding': '10px 24px',
+                    'borderRadius': '6px',
+                    'fontWeight': 'bold',
                     'cursor': 'pointer',
-                    'fontSize': '14px'}
+                    'fontSize': '14px',
+                    'boxShadow': '0 2px 5px rgba(0,0,0,0.08)',
+                }
             ),
             
             # Botón para limpiar resultados del ETL
             html.Button(
                 'Limpiar resultados',
                 id='clear-etl-button',
-                style={'margin': '20px',
+                style={
+                    'margin': '20px',
                     'backgroundColor': "#606060",
                     'color': 'white',
                     'border': 'none',
-                    'borderRadius': '5px',
-                    'padding': '10px 20px',
+                    'padding': '10px 24px',
+                    'borderRadius': '6px',
+                    'fontWeight': 'bold',
                     'cursor': 'pointer',
                     'fontSize': '14px',
-                    'marginLeft': '10px'}
+                    'boxShadow': '0 2px 5px rgba(0,0,0,0.08)',
+                    'marginLeft': '10px'
+                }
             ),
             
             # Sección para opciones de descarga DESPUÉS del ETL (inicialmente oculta)
             html.Div([
-                html.H3("Opciones de descarga", style={'marginTop': '20px', 'marginBottom': '15px'}),
-                html.P("Seleccione el formato y presione 'Descargar' para obtener los datos procesados"),
+                html.H3("Opciones de descarga", style={
+                    'marginTop': '20px',
+                    'marginBottom': '15px',
+                    'color': '#0077b6',
+                    'fontWeight': 'bold',
+                    'textAlign': 'center',
+                    'letterSpacing': '1px'
+                }),
+                html.P(
+                    "Seleccione el formato y presione 'Descargar' para obtener los datos procesados",
+                    style={'textAlign': 'center', 'fontSize': '16px', 'color': '#333'}
+                ),
                 html.Div([
-                    html.Label("Formato de exportación:"),
+                    html.Label("Formato de exportación:", style={
+                        'fontWeight': 'bold',
+                        'fontSize': '15px',
+                        'marginRight': '10px',
+                        'color': '#222'
+                    }),
                     dcc.RadioItems(
                         id='export-format',
                         options=[
@@ -71,97 +99,151 @@ class ETLTab:
                             {'label': 'Base de datos (PostgreSQL)', 'value': 'postgres'}
                         ],
                         value='csv',
-                        style={'marginBottom': '15px'},
-                        labelStyle={'marginRight': '15px', 'display': 'inline-block'}
+                        style={'marginBottom': '15px', 'display': 'inline-block'},
+                        labelStyle={
+                            'marginRight': '18px',
+                            'display': 'inline-block',
+                            'fontSize': '15px',
+                            'color': '#0077b6',
+                            'fontWeight': '500'
+                        }
                     ),
-                ]),
+                ], style={'textAlign': 'center', 'marginBottom': '15px'}),
                 # Campos para PostgreSQL que se mostrarán condicionalmente
                 html.Div(id='postgres-config', children=[
                     html.Div([
-                        html.Label("Host:"),
+                        html.Label("Host:", style={'fontWeight': 'bold', 'marginRight': '5px'}),
                         dcc.Input(id='postgres-host', type='text', value='localhost', 
                                 style={'marginRight': '15px', 'marginBottom': '10px'}),
-                        html.Label("Puerto:"),
+                        html.Label("Puerto:", style={'fontWeight': 'bold', 'marginRight': '5px'}),
                         dcc.Input(id='postgres-port', type='text', value='5432',
                                 style={'marginRight': '15px', 'marginBottom': '10px'}),
                     ]),
                     html.Div([
-                        html.Label("Base de datos:"),
+                        html.Label("Base de datos:", style={'fontWeight': 'bold', 'marginRight': '5px'}),
                         dcc.Input(id='postgres-db', type='text', value='postgres', 
                                 style={'marginRight': '15px', 'marginBottom': '10px'}),
-                        html.Label("Esquema:"),
+                        html.Label("Esquema:", style={'fontWeight': 'bold', 'marginRight': '5px'}),
                         dcc.Input(id='postgres-schema', type='text', value='public',
                                 style={'marginRight': '15px', 'marginBottom': '10px'}),
                     ]),
                     html.Div([
-                        html.Label("Tabla:"),
+                        html.Label("Tabla:", style={'fontWeight': 'bold', 'marginRight': '5px'}),
                         dcc.Input(id='postgres-table', type='text', value='hotel_bookings',
                                 style={'marginRight': '15px', 'marginBottom': '10px'}),
                     ]),
                     html.Div([
-                        html.Label("Usuario:"),
+                        html.Label("Usuario:", style={'fontWeight': 'bold', 'marginRight': '5px'}),
                         dcc.Input(id='postgres-user', type='text', value='postgres',
                                 style={'marginRight': '15px', 'marginBottom': '10px'}),
-                        html.Label("Contraseña:"),
+                        html.Label("Contraseña:", style={'fontWeight': 'bold', 'marginRight': '5px'}),
                         dcc.Input(id='postgres-password', type='password',
                                 style={'marginRight': '15px', 'marginBottom': '10px'}),
                     ]),
-                ], style={'display': 'none', 'border': '1px solid #ddd', 'padding': '15px', 'borderRadius': '5px', 'marginTop': '10px'}),
+                ], style={
+                    'display': 'none',
+                    'border': '1px solid #ddd',
+                    'padding': '15px',
+                    'borderRadius': '8px',
+                    'marginTop': '10px',
+                    'backgroundColor': '#f8f9fa'
+                }),
                 # Campo para nombre de archivo (para formatos de archivo)
                 html.Div(id='file-config', children=[
-                    html.Label("Nombre del archivo:"),
+                    html.Label("Nombre del archivo:", style={
+                        'fontWeight': 'bold',
+                        'fontSize': '15px',
+                        'marginRight': '10px',
+                        'color': '#222'
+                    }),
                     dcc.Input(
                         id='filename-input',
                         type='text',
                         value='hotel_bookings_processed',
-                        style={'width': '400px', 'marginBottom': '15px'}
+                        style={
+                            'width': '350px',
+                            'marginBottom': '15px',
+                            'padding': '8px',
+                            'borderRadius': '5px',
+                            'border': '1px solid #bdbdbd',
+                            'fontSize': '15px'
+                        }
                     ),
-                    html.P("Solo especifique el nombre sin extensión. La extensión se añadirá automáticamente según el formato seleccionado.", 
-                        style={'fontSize': '12px', 'color': '#666', 'margin': '0 0 15px 0'}),
-                ]),
+                    html.P(
+                        "Solo especifique el nombre sin extensión. La extensión se añadirá automáticamente según el formato seleccionado.",
+                        style={'fontSize': '12px', 'color': '#666', 'margin': '0 0 15px 0', 'textAlign': 'center'}
+                    ),
+                ], style={'textAlign': 'center', 'marginBottom': '10px'}),
                 
                 # Botón para descargar después del ETL
-                html.Button(
-                    'Descargar',
-                    id='download-etl-button',
-                    style={'margin': '10px 0',
-                        'backgroundColor': "#28a745",
-                        'color': 'white',
-                        'border': 'none',
-                        'borderRadius': '5px',
-                        'padding': '10px 20px',
-                        'cursor': 'pointer',
-                        'fontSize': '14px'}
-                ),
+                html.Div([
+                    html.Button(
+                        'Descargar',
+                        id='download-etl-button',
+                        style={
+                            'margin': '10px 10px 10px 0',
+                            'backgroundColor': "#00740f",
+                            'color': 'white',
+                            'border': 'none',
+                            'borderRadius': '5px',
+                            'padding': '10px 20px',
+                            'cursor': 'pointer',
+                            'fontSize': '15px',
+                            'fontWeight': 'bold',
+                            'boxShadow': '0 2px 5px rgba(0,0,0,0.08)'
+                        }
+                    ),
+                    html.Button(
+                        'Guardar en PostgreSQL',
+                        id='save-postgres-button',
+                        style={
+                            'margin': '10px 0 10px 10px',
+                            'backgroundColor': "#17a2b8",
+                            'color': 'white',
+                            'border': 'none',
+                            'borderRadius': '5px',
+                            'padding': '10px 20px',
+                            'cursor': 'pointer',
+                            'fontSize': '15px',
+                            'fontWeight': 'bold',
+                            'display': 'none',
+                            'boxShadow': '0 2px 5px rgba(0,0,0,0.08)'
+                        },
+                        n_clicks=0
+                    ),
+                ], style={'textAlign': 'center'}),
                 
                 # Componente de descarga (invisible, pero necesario)
                 dcc.Download(id="download-data"),
                 
-                # Botón para guardar en PostgreSQL (separado ya que no implica descarga)
-                html.Button(
-                    'Guardar en PostgreSQL',
-                    id='save-postgres-button',
-                    style={'margin': '10px 0 10px 10px',
-                        'backgroundColor': "#17a2b8",
-                        'color': 'white',
-                        'border': 'none',
-                        'borderRadius': '5px',
-                        'padding': '10px 20px',
-                        'cursor': 'pointer',
-                        'fontSize': '14px',
-                        'display': 'none'}, # Inicialmente oculto
-                    n_clicks=0
-                ),
-                
                 # Área para mostrar resultados del guardado/descarga
-                html.Div(id='save-output', children=save_output, 
-                        style={'marginTop': '15px', 'padding': '15px', 'borderTop': '1px solid #ddd'}),
+                html.Div(
+                    id='save-output',
+                    children=save_output,
+                    style={
+                        'marginTop': '15px',
+                        'padding': '15px',
+                        # 'borderTop': '1px solid #ddd',
+                        'backgroundColor': '#f8f9fa',
+                        'borderRadius': '8px',
+                        'textAlign': 'center'
+                    }
+                ),
             ], 
             id='export-options-div',
-            style=export_options_div),
+            style={
+                **export_options_div,
+                'maxWidth': '600px',
+                'height': '100px',
+                'margin': '20px auto',
+                'padding': '12px 20px',
+                'backgroundColor': '#f9f9f9',
+                'borderRadius': '8px',
+                'border': '1px solid #28a745'
+            }),
             
             # Separador visual
-            html.Hr(style={'margin': '30px 20px', 'borderTop': '1px solid #eee'}),
+            # html.Hr(style={'margin': '30px 20px', 'borderTop': '1px solid #eee'}),
             
             # Indicador de carga y resultados del ETL - mostrar resultados almacenados si existen
             html.Div([
@@ -175,7 +257,7 @@ class ETLTab:
                     style={'margin': '20px'}
                 )
             ], id='etl-results-container'),
-        ])
+        ], style={'maxWidth': '1100px', 'margin': 'auto', 'fontFamily': 'Segoe UI, Arial, sans-serif'})
 
     def register_callbacks(self):
         @self.app.callback(
@@ -217,11 +299,27 @@ class ETLTab:
                 
                 # Crear resumen para mostrar
                 summary = html.Div([
-                    html.H3("✅ Procesamiento ETL completado", style={'color': 'green', 'fontWeight': 'bold'}),
-                    html.P(f"Se procesaron {len(full_df)} registros y se obtuvieron {len(processed_df)} registros limpios."),
-                    html.P(f"Se concatenaron {len(dfs_to_concat)} conjuntos de datos."),
-                    html.Hr()
-                ])
+                    html.H2("✅ Procesamiento ETL completado", style={
+                        'color': '#28a745',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'marginBottom': '15px',
+                        'fontSize': '1.7rem',
+                        'letterSpacing': '1px'
+                    }),
+                    html.P(f"Se procesaron {len(full_df)} registros y se obtuvieron {len(processed_df)} registros limpios.",
+                        style={'textAlign': 'center', 'fontSize': '1.1rem', 'marginBottom': '8px'}),
+                    html.P(f"Se concatenaron {len(dfs_to_concat)} conjuntos de datos.",
+                        style={'textAlign': 'center', 'fontSize': '1.1rem', 'marginBottom': '8px'}),
+                    # html.Hr(style={'margin': '18px 0'}),
+                ], style={
+                    'backgroundColor': '#f8f9fa',
+                    'borderRadius': '10px',
+                    'padding': '20px 30px',
+                    'margin': '20px auto',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'maxWidth': '600px'
+                })
                 
                 # Mostrar las opciones de exportación después del ETL
                 export_options_style = {
@@ -654,8 +752,34 @@ class ETLTab:
                 data=copy_df.head(5).to_dict('records'),
                 columns=[{"name": i, "id": i} for i in copy_df.columns],
                 page_size=5,
-                style_table={'overflowX': 'auto'},
-                style_cell={'textAlign': 'left'},
+                style_table={
+                    'overflowX': 'auto',
+                    'margin': 'auto',
+                    'width': '95%',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'border': '1px solid #e0e0e0',
+                },
+                style_cell={
+                    'textAlign': 'center',
+                    'fontFamily': 'Segoe UI, Arial, sans-serif',
+                    'fontSize': '15px',
+                    'padding': '8px',
+                    'backgroundColor': '#fcfcfc',
+                },
+                style_header={
+                    'backgroundColor': '#e3e3e3',
+                    'fontWeight': 'bold',
+                    'textAlign': 'center',
+                    'fontSize': '16px',
+                    'borderBottom': '2px solid #bdbdbd'
+                },
+                style_data_conditional=[
+                    {
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': '#f5f7fa'
+                    }
+                ],
             ),
             html.Hr(),
         ])
@@ -735,8 +859,34 @@ class ETLTab:
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
                     page_size=5,
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                    'overflowX': 'auto',
+                    'margin': 'auto',
+                    'width': '95%',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -819,8 +969,34 @@ class ETLTab:
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
                     page_size=5,
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                    'overflowX': 'auto',
+                    'margin': 'auto',
+                    'width': '95%',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -945,8 +1121,34 @@ class ETLTab:
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
                     page_size=5,
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                    'overflowX': 'auto',
+                    'margin': 'auto',
+                    'width': '95%',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -1029,8 +1231,34 @@ class ETLTab:
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
                     page_size=5,
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                    'overflowX': 'auto',
+                    'margin': 'auto',
+                    'width': '95%',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -1127,8 +1355,34 @@ class ETLTab:
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
                         page_size=5,
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1202,8 +1456,34 @@ class ETLTab:
                             data=copy_df.head(5).to_dict('records'),
                             columns=[{"name": i, "id": i} for i in copy_df.columns],
                             page_size=5,
-                            style_table={'overflowX': 'auto'},
-                            style_cell={'textAlign': 'left'},
+                            style_table={
+                                'overflowX': 'auto',
+                                'margin': 'auto',
+                                'width': '95%',
+                                'borderRadius': '8px',
+                                'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                                'border': '1px solid #e0e0e0',
+                            },
+                            style_cell={
+                                'textAlign': 'center',
+                                'fontFamily': 'Segoe UI, Arial, sans-serif',
+                                'fontSize': '15px',
+                                'padding': '8px',
+                                'backgroundColor': '#fcfcfc',
+                            },
+                            style_header={
+                                'backgroundColor': '#e3e3e3',
+                                'fontWeight': 'bold',
+                                'textAlign': 'center',
+                                'fontSize': '16px',
+                                'borderBottom': '2px solid #bdbdbd'
+                            },
+                            style_data_conditional=[
+                                {
+                                    'if': {'row_index': 'odd'},
+                                    'backgroundColor': '#f5f7fa'
+                                }
+                            ],
                         ),
                         html.Hr(),
                     ])
@@ -1224,8 +1504,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1247,8 +1553,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1270,8 +1602,34 @@ class ETLTab:
                         dash_table.DataTable(
                             data=copy_df.head(5).to_dict('records'),
                             columns=[{"name": i, "id": i} for i in copy_df.columns],
-                            style_table={'overflowX': 'auto'},
-                            style_cell={'textAlign': 'left'},
+                            style_table={
+                                'overflowX': 'auto',
+                                'margin': 'auto',
+                                'width': '95%',
+                                'borderRadius': '8px',
+                                'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                                'border': '1px solid #e0e0e0',
+                            },
+                            style_cell={
+                                'textAlign': 'center',
+                                'fontFamily': 'Segoe UI, Arial, sans-serif',
+                                'fontSize': '15px',
+                                'padding': '8px',
+                                'backgroundColor': '#fcfcfc',
+                            },
+                            style_header={
+                                'backgroundColor': '#e3e3e3',
+                                'fontWeight': 'bold',
+                                'textAlign': 'center',
+                                'fontSize': '16px',
+                                'borderBottom': '2px solid #bdbdbd'
+                            },
+                            style_data_conditional=[
+                                {
+                                    'if': {'row_index': 'odd'},
+                                    'backgroundColor': '#f5f7fa'
+                                }
+                            ],
                         ),
                         html.Hr(),
                     ])
@@ -1293,8 +1651,34 @@ class ETLTab:
                         dash_table.DataTable(
                             data=copy_df.head(5).to_dict('records'),
                             columns=[{"name": i, "id": i} for i in copy_df.columns],
-                            style_table={'overflowX': 'auto'},
-                            style_cell={'textAlign': 'left'},
+                            style_table={
+                                'overflowX': 'auto',
+                                'margin': 'auto',
+                                'width': '95%',
+                                'borderRadius': '8px',
+                                'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                                'border': '1px solid #e0e0e0',
+                            },
+                            style_cell={
+                                'textAlign': 'center',
+                                'fontFamily': 'Segoe UI, Arial, sans-serif',
+                                'fontSize': '15px',
+                                'padding': '8px',
+                                'backgroundColor': '#fcfcfc',
+                            },
+                            style_header={
+                                'backgroundColor': '#e3e3e3',
+                                'fontWeight': 'bold',
+                                'textAlign': 'center',
+                                'fontSize': '16px',
+                                'borderBottom': '2px solid #bdbdbd'
+                            },
+                            style_data_conditional=[
+                                {
+                                    'if': {'row_index': 'odd'},
+                                    'backgroundColor': '#f5f7fa'
+                                }
+                            ],
                         ),
                         html.Hr(),
                     ])
@@ -1355,8 +1739,34 @@ class ETLTab:
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
                         page_size=5,
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1451,8 +1861,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1470,8 +1906,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1535,8 +1997,34 @@ class ETLTab:
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
                         page_size=5,
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1637,8 +2125,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns if i != 'reservation_status_date_normalized'],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1732,8 +2246,34 @@ class ETLTab:
                         dash_table.DataTable(
                             data=copy_df.head(5).to_dict('records'),
                             columns=[{"name": i, "id": i} for i in copy_df.columns],
-                            style_table={'overflowX': 'auto'},
-                            style_cell={'textAlign': 'left'},
+                            style_table={
+                                'overflowX': 'auto',
+                                'margin': 'auto',
+                                'width': '95%',
+                                'borderRadius': '8px',
+                                'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                                'border': '1px solid #e0e0e0',
+                            },
+                            style_cell={
+                                'textAlign': 'center',
+                                'fontFamily': 'Segoe UI, Arial, sans-serif',
+                                'fontSize': '15px',
+                                'padding': '8px',
+                                'backgroundColor': '#fcfcfc',
+                            },
+                            style_header={
+                                'backgroundColor': '#e3e3e3',
+                                'fontWeight': 'bold',
+                                'textAlign': 'center',
+                                'fontSize': '16px',
+                                'borderBottom': '2px solid #bdbdbd'
+                            },
+                            style_data_conditional=[
+                                {
+                                    'if': {'row_index': 'odd'},
+                                    'backgroundColor': '#f5f7fa'
+                                }
+                            ],
                         ),
                         html.Hr(),
                     ])
@@ -1752,8 +2292,34 @@ class ETLTab:
                         dash_table.DataTable(
                             data=copy_df.head(5).to_dict('records'),
                             columns=[{"name": i, "id": i} for i in copy_df.columns],
-                            style_table={'overflowX': 'auto'},
-                            style_cell={'textAlign': 'left'},
+                            style_table={
+                                'overflowX': 'auto',
+                                'margin': 'auto',
+                                'width': '95%',
+                                'borderRadius': '8px',
+                                'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                                'border': '1px solid #e0e0e0',
+                            },
+                            style_cell={
+                                'textAlign': 'center',
+                                'fontFamily': 'Segoe UI, Arial, sans-serif',
+                                'fontSize': '15px',
+                                'padding': '8px',
+                                'backgroundColor': '#fcfcfc',
+                            },
+                            style_header={
+                                'backgroundColor': '#e3e3e3',
+                                'fontWeight': 'bold',
+                                'textAlign': 'center',
+                                'fontSize': '16px',
+                                'borderBottom': '2px solid #bdbdbd'
+                            },
+                            style_data_conditional=[
+                                {
+                                    'if': {'row_index': 'odd'},
+                                    'backgroundColor': '#f5f7fa'
+                                }
+                            ],
                         ),
                         html.Hr(),
                     ])
@@ -1839,8 +2405,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1853,8 +2445,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1972,8 +2590,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -1986,8 +2630,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -2052,8 +2722,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2140,8 +2836,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -2153,8 +2875,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -2216,8 +2964,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -2228,8 +3002,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -2274,8 +3074,34 @@ class ETLTab:
             dash_table.DataTable(
                 data=copy_df.head(5).to_dict('records'),
                 columns=[{"name": i, "id": i} for i in copy_df.columns],
-                style_table={'overflowX': 'auto'},
-                style_cell={'textAlign': 'left'},
+                style_table={
+                    'overflowX': 'auto',
+                    'margin': 'auto',
+                    'width': '95%',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'border': '1px solid #e0e0e0',
+                },
+                style_cell={
+                    'textAlign': 'center',
+                    'fontFamily': 'Segoe UI, Arial, sans-serif',
+                    'fontSize': '15px',
+                    'padding': '8px',
+                    'backgroundColor': '#fcfcfc',
+                },
+                style_header={
+                    'backgroundColor': '#e3e3e3',
+                    'fontWeight': 'bold',
+                    'textAlign': 'center',
+                    'fontSize': '16px',
+                    'borderBottom': '2px solid #bdbdbd'
+                },
+                style_data_conditional=[
+                    {
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': '#f5f7fa'
+                    }
+                ],
             ),
             html.Hr(),
         ])
@@ -2295,8 +3121,34 @@ class ETLTab:
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
                     page_size=5,
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2353,8 +3205,34 @@ class ETLTab:
             dash_table.DataTable(
                 data=copy_df.head(5).to_dict('records'),
                 columns=[{"name": i, "id": i} for i in copy_df.columns],
-                style_table={'overflowX': 'auto'},
-                style_cell={'textAlign': 'left'},
+                style_table={
+                    'overflowX': 'auto',
+                    'margin': 'auto',
+                    'width': '95%',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'border': '1px solid #e0e0e0',
+                },
+                style_cell={
+                    'textAlign': 'center',
+                    'fontFamily': 'Segoe UI, Arial, sans-serif',
+                    'fontSize': '15px',
+                    'padding': '8px',
+                    'backgroundColor': '#fcfcfc',
+                },
+                style_header={
+                    'backgroundColor': '#e3e3e3',
+                    'fontWeight': 'bold',
+                    'textAlign': 'center',
+                    'fontSize': '16px',
+                    'borderBottom': '2px solid #bdbdbd'
+                },
+                style_data_conditional=[
+                    {
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': '#f5f7fa'
+                    }
+                ],
             ),
             html.Hr(),
         ])
@@ -2398,8 +3276,34 @@ class ETLTab:
             dash_table.DataTable(
                 data=copy_df.head(5).to_dict('records'),
                 columns=[{"name": i, "id": i} for i in copy_df.columns],
-                style_table={'overflowX': 'auto'},
-                style_cell={'textAlign': 'left'},
+                style_table={
+                    'overflowX': 'auto',
+                    'margin': 'auto',
+                    'width': '95%',
+                    'borderRadius': '8px',
+                    'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                    'border': '1px solid #e0e0e0',
+                },
+                style_cell={
+                    'textAlign': 'center',
+                    'fontFamily': 'Segoe UI, Arial, sans-serif',
+                    'fontSize': '15px',
+                    'padding': '8px',
+                    'backgroundColor': '#fcfcfc',
+                },
+                style_header={
+                    'backgroundColor': '#e3e3e3',
+                    'fontWeight': 'bold',
+                    'textAlign': 'center',
+                    'fontSize': '16px',
+                    'borderBottom': '2px solid #bdbdbd'
+                },
+                style_data_conditional=[
+                    {
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': '#f5f7fa'
+                    }
+                ],
             ),
             html.Hr(),
         ])
@@ -2500,8 +3404,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2561,8 +3491,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2618,8 +3574,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2636,8 +3618,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2693,8 +3701,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2717,8 +3751,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2774,8 +3834,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2793,8 +3879,34 @@ class ETLTab:
                     dash_table.DataTable(
                         data=copy_df.head(5).to_dict('records'),
                         columns=[{"name": i, "id": i} for i in copy_df.columns],
-                        style_table={'overflowX': 'auto'},
-                        style_cell={'textAlign': 'left'},
+                        style_table={
+                            'overflowX': 'auto',
+                            'margin': 'auto',
+                            'width': '95%',
+                            'borderRadius': '8px',
+                            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                            'border': '1px solid #e0e0e0',
+                        },
+                        style_cell={
+                            'textAlign': 'center',
+                            'fontFamily': 'Segoe UI, Arial, sans-serif',
+                            'fontSize': '15px',
+                            'padding': '8px',
+                            'backgroundColor': '#fcfcfc',
+                        },
+                        style_header={
+                            'backgroundColor': '#e3e3e3',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'fontSize': '16px',
+                            'borderBottom': '2px solid #bdbdbd'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#f5f7fa'
+                            }
+                        ],
                     ),
                     html.Hr(),
                 ])
@@ -2848,8 +3960,34 @@ class ETLTab:
                 dash_table.DataTable(
                     data=copy_df.head(5).to_dict('records'),
                     columns=[{"name": i, "id": i} for i in copy_df.columns],
-                    style_table={'overflowX': 'auto'},
-                    style_cell={'textAlign': 'left'},
+                    style_table={
+                        'overflowX': 'auto',
+                        'margin': 'auto',
+                        'width': '95%',
+                        'borderRadius': '8px',
+                        'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+                        'border': '1px solid #e0e0e0',
+                    },
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px',
+                        'backgroundColor': '#fcfcfc',
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center',
+                        'fontSize': '16px',
+                        'borderBottom': '2px solid #bdbdbd'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f5f7fa'
+                        }
+                    ],
                 ),
                 html.Hr(),
             ])
@@ -2859,12 +3997,46 @@ class ETLTab:
         
         # Resumen final del procesamiento
         element = html.Div([
-            html.H3("Resumen de procesamiento"),
-            html.P(f"Registros iniciales: {initial_count}"),
-            html.P(f"Registros finales: {len(copy_df)}"),
-            html.P(f"Reducción total: {initial_count - len(copy_df)} registros ({(initial_count - len(copy_df))/initial_count*100:.2f}%)"),
-            html.Hr(),
-        ])
+            html.H3("📊 Resumen de procesamiento", style={
+                'color': '#0077b6',
+                'fontWeight': 'bold',
+                'textAlign': 'center',
+                'marginBottom': '18px',
+                'fontSize': '1.5rem',
+                'letterSpacing': '1px'
+            }),
+            html.P(f"Registros iniciales: {initial_count}", style={
+                'textAlign': 'center',
+                'fontSize': '1.1rem',
+                'marginBottom': '6px',
+                'fontWeight': '500'
+            }),
+            html.P(f"Registros finales: {len(copy_df)}", style={
+                'textAlign': 'center',
+                'fontSize': '1.1rem',
+                'marginBottom': '6px',
+                'fontWeight': '500'
+            }),
+            html.P(
+                f"Reducción total: {initial_count - len(copy_df)} registros "
+                f"({(initial_count - len(copy_df))/initial_count*100:.2f}%)",
+                style={
+                    'textAlign': 'center',
+                    'fontSize': '1.1rem',
+                    'marginBottom': '10px',
+                    'color': '#dc3545' if initial_count - len(copy_df) > 0 else '#28a745',
+                    'fontWeight': 'bold'
+                }
+            ),
+            html.Hr(style={'margin': '18px 0'}),
+        ], style={
+            'backgroundColor': '#f8f9fa',
+            'borderRadius': '10px',
+            'padding': '20px 30px',
+            'margin': '20px auto',
+            'boxShadow': '0 2px 8px rgba(0,0,0,0.07)',
+            'maxWidth': '500px'
+        })
         process_elements.append(element)
         
         return copy_df, process_elements

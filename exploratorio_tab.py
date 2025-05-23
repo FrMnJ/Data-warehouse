@@ -11,12 +11,40 @@ class ExploratorioTab:
 
     def render(self):
         return html.Div([
-            html.H2("Análisis Exploratorio", style={'margin': '20px'}),
+            html.H2("Análisis Exploratorio", style={
+                'margin': '20px',
+                'color': '#333',
+                'fontWeight': 'bold',
+                'letterSpacing': '1px'
+            }),
 
             html.Div([
-                html.Label("Selecciona una columna:"),
-                dcc.Dropdown(id='eda-column-dropdown', placeholder="Selecciona una columna"),
-            ], style={'margin': '20px', 'width': '40%'}),
+                html.Label("Selecciona una columna:", style={
+                    'fontWeight': 'bold',
+                    'fontSize': '17px',
+                    'marginBottom': '8px',
+                    'display': 'block',
+                    'letterSpacing': '0.5px'
+                }),
+                dcc.Dropdown(
+                    id='eda-column-dropdown',
+                    placeholder="Selecciona una columna",
+                    style={
+                        'width': '100%',
+                        'fontSize': '16px',
+                        'borderRadius': '6px',
+                        'border': '1px solid #bdbdbd',
+                        'padding': '6px',
+                        'backgroundColor': '#f8f9fa',
+                        'color': '#222',
+                        'boxShadow': '0 2px 5px rgba(0,0,0,0.04)'
+                    }
+                ),
+            ], style={
+                'margin': '30px 20px 20px 20px',
+                'width': '40%',
+                'minWidth': '260px'
+            }),
 
             html.Div(id='eda-stats-output', style={'margin': '20px'}),
 
@@ -26,7 +54,7 @@ class ExploratorioTab:
             ], style={'margin': '20px'}),
 
             html.Div(id='eda-explanation', style={'margin': '20px', 'fontStyle': 'italic', 'color': '#333'}),
-        ])
+        ], style={'maxWidth': '1100px', 'margin': 'auto', 'fontFamily': 'Segoe UI, Arial, sans-serif'})
 
     def register_callbacks(self):
         @self.app.callback(
