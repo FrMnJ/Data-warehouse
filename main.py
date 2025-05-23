@@ -17,6 +17,20 @@ app = Dash(name="Data warehouse",suppress_callback_exceptions=True)
 
 # App layout
 app.layout = [
+    html.H1(
+        "Data Warehouse",
+        style={
+            'textAlign': 'center',
+            'marginTop': '30px',
+            'marginBottom': '10px',
+            'color': '#0077b6',
+            'fontWeight': 'bold',
+            'fontSize': '2.5rem',
+            'letterSpacing': '2px',
+            'fontFamily': 'Segoe UI, Arial, sans-serif',
+            'textShadow': '0 2px 8px rgba(0,0,0,0.07)'
+        }
+    ),
     dcc.Tabs(
         id='tabs',
         value='carga',

@@ -30,7 +30,7 @@ class MineriaTab:
             }),
             html.Div([
                 html.Button(
-                    'Ejecutar Minería de datos',
+                    'Ejecutar minería de datos',
                     id='run-data-mining',
                     n_clicks=0,
                     style={
@@ -41,7 +41,7 @@ class MineriaTab:
                         'padding': '10px 24px',
                         'borderRadius': '6px',
                         'fontWeight': 'bold',
-                        'fontSize': '16px',
+                        'fontSize': '14px',
                         'boxShadow': '0 2px 5px rgba(0,0,0,0.08)',
                         'display': 'inline-block' if not data_mining_output else 'none',
                         'transition': 'background 0.3s',
