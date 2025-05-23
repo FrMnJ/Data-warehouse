@@ -226,32 +226,6 @@ class DecisionTab:
                     html.P("Esta información es útil para identificar qué tipo de habitación asignada tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
                 ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
                 html.Div([
-                    # Bar chart: Peticiones especiales por tipo de depósito
-                    dcc.Graph(
-                        id='special-requests-deposit-type-bar-chart',
-                        figure={
-                            'data': [
-                                {
-                                    'x': deposit_type_demands['deposit_type'],
-                                    'y': deposit_type_demands['total_of_special_requests'],
-                                    'type': 'bar',
-                                    'name': 'Peticiones especiales por tipo de depósito',
-                                    'marker': {'color': '#6f42c1'}
-                                }
-                            ],
-                            'layout': {
-                                'title': {'text': "Peticiones especiales por tipo de depósito", 'font_size': 24},
-                                'xaxis': {'title': 'Tipo de depósito'},
-                                'yaxis': {'title': 'Total de peticiones especiales'},
-                                'height': 400,
-                                'width': 600
-                            }
-                        }
-                    ),
-                    html.P("Esta gráfica muestra el total de peticiones especiales por tipo de depósito."),
-                    html.P("Esta información es útil para identificar qué tipo de depósito tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
-                html.Div([
                     # Bar chart: Peticiones especiales por tipo de cliente
                     dcc.Graph(
                         id='special-requests-customer-type-bar-chart',
