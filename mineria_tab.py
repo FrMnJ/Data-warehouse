@@ -1,20 +1,13 @@
-import os
 from dash import Input, Output, State, dcc, html, dash_table
 import dash
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
 import plotly.graph_objs as go
-import matplotlib
 from imblearn.over_sampling import SMOTE
-matplotlib.use('Agg')
 import dash_cytoscape as cyto
 
 from info_compartida import DATAFRAMES, PROCESS_DATASET

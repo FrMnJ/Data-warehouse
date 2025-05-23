@@ -152,5 +152,5 @@ if __name__ == '__main__':
     mineria_tab = MineriaTab(app)
     etl_tab = ETLTab(app)
     exploratorio_tab = ExploratorioTab(app)
-    decision_tab = DecisionTab()
+    decision_tab = DecisionTab(app)
     app.run(debug=True)
