@@ -31,320 +31,304 @@ class DecisionTab:
             deposit_type_demands = df.groupby('deposit_type')['total_of_special_requests'].sum().reset_index()
             customer_type_demands = df.groupby('customer_type')['total_of_special_requests'].sum().reset_index()
             special_counts = df['total_of_special_requests'].apply(lambda x: str(x) if x < 3 else '3+').value_counts().sort_index()
-            # Grafica de frecuencia de peticiones especiales por hotel
         return html.Div([
-            html.H2("Toma de decisiones",
-                    style={'margin': '20px'}),  
-            # Grafica de pastel de clientes que hace petciones especiales
-            html.H3("🎯 Objetivo de la Toma de Decisiones"),
-            html.P("Ayudar al hotel a optimizar sus recursos y mejorar la experiencia del cliente, anticipando solicitudes especiales y detectando clientes especiales antes de su llegada."),
-            html.P("Las peticiones especiales son un indicador de las necesidades de los clientes y pueden influir en la satisfacción del cliente."),
-            html.H3("📊 Visualizaciones clave para la toma de decisiones"),
+            html.H2("Toma de decisiones", style={'margin': '20px', 'color': '#2c3e50', 'fontWeight': 'bold', 'fontSize': '2.2rem', 'letterSpacing': '1px'}),
+            html.H3("🎯 Objetivo de la Toma de Decisiones", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
+            html.P("Ayudar al hotel a optimizar sus recursos y mejorar la experiencia del cliente, anticipando solicitudes especiales y detectando clientes especiales antes de su llegada.", style={'background': '#eaf4fb', 'padding': '10px', 'borderRadius': '6px', 'marginBottom': '8px'}),
+            html.P("Las peticiones especiales son un indicador de las necesidades de los clientes y pueden influir en la satisfacción del cliente.", style={'background': '#eaf4fb', 'padding': '10px', 'borderRadius': '6px', 'marginBottom': '18px'}),
+            html.H3("📊 Visualizaciones clave para la toma de decisiones", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
             html.Div([
-                dcc.Graph(
-                    id='special-requests-pie-chart',
-                    figure={
-                        'data': [
-                            {
-                                'labels': client_demading_counts.index,
-                                'values': client_demading_counts.values,
-                                'type': 'pie',
-                                'name': 'Clientes demandantes',
-                                'hoverinfo': 'label+percent+name',
-                                'textinfo': 'percent',
-                                'textfont_size': 20,
-                                'marker': {'line': {'width': 2, 'color': '#ffffff'}}
+                html.Div([
+                    # Pie chart: Clientes demandantes
+                    dcc.Graph(
+                        id='special-requests-pie-chart',
+                        figure={
+                            'data': [
+                                {
+                                    'labels': client_demading_counts.index,
+                                    'values': client_demading_counts.values,
+                                    'type': 'pie',
+                                    'name': 'Clientes demandantes',
+                                    'hoverinfo': 'label+percent+name',
+                                    'textinfo': 'percent',
+                                    'textfont_size': 20,
+                                    'marker': {'line': {'width': 2, 'color': '#ffffff'}}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Clientes que hacen peticiones especiales", 'font_size': 24},
+                                'showlegend': True,
+                                'height': 400,
+                                'width': 600
                             }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Clientes que hacen peticiones especiales",
-                                'font_size': 24
-                            },
-                            'showlegend': True,
-                            'height': 400,
-                            'width': 600
                         }
-                    }
-                ),
-                html.P("Esta gráfica muestra la proporción de clientes que hacen peticiones especiales en comparación con aquellos que no lo hacen.", style={'margin-top': '10px'}),
-                html.P("Esta información resulta útil para entender la magnitud del fenómeno y su impacto en la operación del hotel."),
-            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de pastel de frecuencias de peticiones especiales
-            html.Div([
-                dcc.Graph(
-                    id='requests-distribution-pie',
-                    figure={
-                        'data': [
-                            {
-                                'labels': special_counts.index,
-                                'values': special_counts.values,
-                                'type': 'pie',
-                                'name': 'Distribución de peticiones',
-                                'hoverinfo': 'label+percent+name',
-                                'textinfo': 'percent',
-                                'textfont_size': 20,
-                                'marker': {'line': {'width': 2, 'color': '#ffffff'}}
+                    ),
+                    html.P("Esta gráfica muestra la proporción de clientes que hacen peticiones especiales en comparación con aquellos que no lo hacen.", style={'margin-top': '10px'}),
+                    html.P("Esta información resulta útil para entender la magnitud del fenómeno y su impacto en la operación del hotel."),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+                html.Div([
+                    # Pie chart: Distribución de peticiones especiales
+                    dcc.Graph(
+                        id='requests-distribution-pie',
+                        figure={
+                            'data': [
+                                {
+                                    'labels': special_counts.index,
+                                    'values': special_counts.values,
+                                    'type': 'pie',
+                                    'name': 'Distribución de peticiones',
+                                    'hoverinfo': 'label+percent+name',
+                                    'textinfo': 'percent',
+                                    'textfont_size': 20,
+                                    'marker': {'line': {'width': 2, 'color': '#ffffff'}}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Distribución de peticiones especiales por cliente (0, 1, 2, 3+)", 'font_size': 24},
+                                'showlegend': True,
+                                'height': 400,
+                                'width': 600
                             }
-                        ],
-                        'layout': {
-                        'title': {
-                            'text': "Distribución de peticiones especiales por cliente (0, 1, 2, 3+)",
-                            'font_size': 24
-                        },
-                        'showlegend': True,
-                        'height': 400,
-                        'width': 600
-                    }
-                }
-            ),
-                html.P("Esta gráfica muestra la distribución de peticiones especiales por cliente, categorizadas en 0, 1, 2 y 3+ o más peticiones especiales.", style={'margin-top': '10px'}),
-                html.P("Esta información es útil para entender la frecuencia de las peticiones especiales y su impacto en la operación del hotel."),
-            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'margin-top': '20px'} ),
-            # Grafica de peticiones especiales por hotel
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-hotel-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': hotel_demands['hotel'],
-                                'y': hotel_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por hotel',
-                                'marker': {'color': '#007bff'}
-                            }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por hotel",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Hotel'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
                         }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por hotel."),
-                html.P("Esta información es útil para identificar qué hotel tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-                html.P("En 'City Hotel' requiere más atención en comparación de Resort Hotel.", style={'margin-top': '10px'}),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de peticiones especiales por segmento de mercado
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-market-segment-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': market_segment_demands['market_segment'],
-                                'y': market_segment_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por segmento de mercado',
-                                'marker': {'color': '#28a745'}
+                    ),
+                    html.P("Esta gráfica muestra la distribución de peticiones especiales por cliente, categorizadas en 0, 1, 2 y 3+ o más peticiones especiales.", style={'margin-top': '10px'}),
+                    html.P("Esta información es útil para entender la frecuencia de las peticiones especiales y su impacto en la operación del hotel."),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+                html.Div([
+                    # Bar chart: Peticiones especiales por hotel
+                    dcc.Graph(
+                        id='special-requests-hotel-bar-chart',
+                        figure={
+                            'data': [
+                                {
+                                    'x': hotel_demands['hotel'],
+                                    'y': hotel_demands['total_of_special_requests'],
+                                    'type': 'bar',
+                                    'name': 'Peticiones especiales por hotel',
+                                    'marker': {'color': '#007bff'}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Peticiones especiales por hotel", 'font_size': 24},
+                                'xaxis': {'title': 'Hotel'},
+                                'yaxis': {'title': 'Total de peticiones especiales'},
+                                'height': 400,
+                                'width': 600
                             }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por segmento de mercado",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Segmento de mercado'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
                         }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por segmento de mercado."),
-                html.P("Esta información es útil para identificar qué segmento de mercado tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de peticiones especiales por canal de distribución
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-distribution-channel-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': distribution_channel_demands['distribution_channel'],
-                                'y': distribution_channel_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por canal de distribución',
-                                'marker': {'color': '#dc3545'}
+                    ),
+                    html.P("Esta gráfica muestra el total de peticiones especiales por hotel."),
+                    html.P("Esta información es útil para identificar qué hotel tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
+                    html.P("En 'City Hotel' requiere más atención en comparación de Resort Hotel.", style={'margin-top': '10px'}),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+                html.Div([
+                    # Bar chart: Peticiones especiales por segmento de mercado
+                    dcc.Graph(
+                        id='special-requests-market-segment-bar-chart',
+                        figure={
+                            'data': [
+                                {
+                                    'x': market_segment_demands['market_segment'],
+                                    'y': market_segment_demands['total_of_special_requests'],
+                                    'type': 'bar',
+                                    'name': 'Peticiones especiales por segmento de mercado',
+                                    'marker': {'color': '#28a745'}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Peticiones especiales por segmento de mercado", 'font_size': 24},
+                                'xaxis': {'title': 'Segmento de mercado'},
+                                'yaxis': {'title': 'Total de peticiones especiales'},
+                                'height': 400,
+                                'width': 600
                             }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por canal de distribución",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Canal de distribución'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
                         }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por canal de distribución."),
-                html.P("Esta información es útil para identificar qué canal de distribución tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de peticiones especiales por tipo de habitación reservada
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-reserved-room-type-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': reserved_room_type_demands['reserved_room_type'],
-                                'y': reserved_room_type_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por tipo de habitación reservada',
-                                'marker': {'color': '#ffc107'}
+                    ),
+                    html.P("Esta gráfica muestra el total de peticiones especiales por segmento de mercado."),
+                    html.P("Esta información es útil para identificar qué segmento de mercado tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+                html.Div([
+                    # Bar chart: Peticiones especiales por canal de distribución
+                    dcc.Graph(
+                        id='special-requests-distribution-channel-bar-chart',
+                        figure={
+                            'data': [
+                                {
+                                    'x': distribution_channel_demands['distribution_channel'],
+                                    'y': distribution_channel_demands['total_of_special_requests'],
+                                    'type': 'bar',
+                                    'name': 'Peticiones especiales por canal de distribución',
+                                    'marker': {'color': '#dc3545'}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Peticiones especiales por canal de distribución", 'font_size': 24},
+                                'xaxis': {'title': 'Canal de distribución'},
+                                'yaxis': {'title': 'Total de peticiones especiales'},
+                                'height': 400,
+                                'width': 600
                             }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por tipo de habitación reservada",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Tipo de habitación reservada'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
                         }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por tipo de habitación reservada."),
-                html.P("Esta información es útil para identificar qué tipo de habitación reservada tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de peticiones especiales por tipo de habitación asignada
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-assigned-room-type-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': assigned_room_type_demands['assigned_room_type'],
-                                'y': assigned_room_type_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por tipo de habitación asignada',
-                                'marker': {'color': '#17a2b8'}
+                    ),
+                    html.P("Esta gráfica muestra el total de peticiones especiales por canal de distribución."),
+                    html.P("Esta información es útil para identificar qué canal de distribución tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+                html.Div([
+                    # Bar chart: Peticiones especiales por tipo de habitación reservada
+                    dcc.Graph(
+                        id='special-requests-reserved-room-type-bar-chart',
+                        figure={
+                            'data': [
+                                {
+                                    'x': reserved_room_type_demands['reserved_room_type'],
+                                    'y': reserved_room_type_demands['total_of_special_requests'],
+                                    'type': 'bar',
+                                    'name': 'Peticiones especiales por tipo de habitación reservada',
+                                    'marker': {'color': '#ffc107'}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Peticiones especiales por tipo de habitación reservada", 'font_size': 24},
+                                'xaxis': {'title': 'Tipo de habitación reservada'},
+                                'yaxis': {'title': 'Total de peticiones especiales'},
+                                'height': 400,
+                                'width': 600
                             }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por tipo de habitación asignada",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Tipo de habitación asignada'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
                         }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por tipo de habitación asignada."),
-                html.P("Esta información es útil para identificar qué tipo de habitación asignada tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de peticiones especiales por tipo de depósito
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-deposit-type-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': deposit_type_demands['deposit_type'],
-                                'y': deposit_type_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por tipo de depósito',
-                                'marker': {'color': '#6f42c1'}
+                    ),
+                    html.P("Esta gráfica muestra el total de peticiones especiales por tipo de habitación reservada."),
+                    html.P("Esta información es útil para identificar qué tipo de habitación reservada tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+                html.Div([
+                    # Bar chart: Peticiones especiales por tipo de habitación asignada
+                    dcc.Graph(
+                        id='special-requests-assigned-room-type-bar-chart',
+                        figure={
+                            'data': [
+                                {
+                                    'x': assigned_room_type_demands['assigned_room_type'],
+                                    'y': assigned_room_type_demands['total_of_special_requests'],
+                                    'type': 'bar',
+                                    'name': 'Peticiones especiales por tipo de habitación asignada',
+                                    'marker': {'color': '#17a2b8'}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Peticiones especiales por tipo de habitación asignada", 'font_size': 24},
+                                'xaxis': {'title': 'Tipo de habitación asignada'},
+                                'yaxis': {'title': 'Total de peticiones especiales'},
+                                'height': 400,
+                                'width': 600
                             }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por tipo de depósito",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Tipo de depósito'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
                         }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por tipo de depósito."),
-                html.P("Esta información es útil para identificar qué tipo de depósito tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Tipo de cliente
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-customer-type-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': customer_type_demands['customer_type'],
-                                'y': customer_type_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por tipo de cliente',
-                                'marker': {'color': '#20c997'}
+                    ),
+                    html.P("Esta gráfica muestra el total de peticiones especiales por tipo de habitación asignada."),
+                    html.P("Esta información es útil para identificar qué tipo de habitación asignada tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+                html.Div([
+                    # Bar chart: Peticiones especiales por tipo de depósito
+                    dcc.Graph(
+                        id='special-requests-deposit-type-bar-chart',
+                        figure={
+                            'data': [
+                                {
+                                    'x': deposit_type_demands['deposit_type'],
+                                    'y': deposit_type_demands['total_of_special_requests'],
+                                    'type': 'bar',
+                                    'name': 'Peticiones especiales por tipo de depósito',
+                                    'marker': {'color': '#6f42c1'}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Peticiones especiales por tipo de depósito", 'font_size': 24},
+                                'xaxis': {'title': 'Tipo de depósito'},
+                                'yaxis': {'title': 'Total de peticiones especiales'},
+                                'height': 400,
+                                'width': 600
                             }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por tipo de cliente",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Tipo de cliente'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
                         }
-                    }),
-                html.P("Esta gráfica muestra el total de peticiones especiales por tipo de cliente."),
-                html.P("Esta información es útil para identificar qué tipo de cliente tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),  
+                    ),
+                    html.P("Esta gráfica muestra el total de peticiones especiales por tipo de depósito."),
+                    html.P("Esta información es útil para identificar qué tipo de depósito tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+                html.Div([
+                    # Bar chart: Peticiones especiales por tipo de cliente
+                    dcc.Graph(
+                        id='special-requests-customer-type-bar-chart',
+                        figure={
+                            'data': [
+                                {
+                                    'x': customer_type_demands['customer_type'],
+                                    'y': customer_type_demands['total_of_special_requests'],
+                                    'type': 'bar',
+                                    'name': 'Peticiones especiales por tipo de cliente',
+                                    'marker': {'color': '#20c997'}
+                                }
+                            ],
+                            'layout': {
+                                'title': {'text': "Peticiones especiales por tipo de cliente", 'font_size': 24},
+                                'xaxis': {'title': 'Tipo de cliente'},
+                                'yaxis': {'title': 'Total de peticiones especiales'},
+                                'height': 400,
+                                'width': 600
+                            }
+                        }
+                    ),
+                    html.P("Esta gráfica muestra el total de peticiones especiales por tipo de cliente."),
+                    html.P("Esta información es útil para identificar qué tipo de cliente tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
+                ], style={'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'padding': '20px', 'margin': '10px'}),
+            ], style={
+                'display': 'grid',
+                'gridTemplateColumns': '1fr 1fr',
+                'gap': '20px',
+                'marginTop': '20px',
+                'marginBottom': '20px',
+            }),
+            # --- End of two-column grid ---
+            # Full-width: Graph by day
             html.Div([
-                html.H3("Grafica de peticiones especiales por día"),
-                html.Label("Selecciona una fecha de inicio:", style={'margin-right': '10px', 'font-weight': 'bold'}),
-                dcc.DatePickerSingle(
-                    id='start-date-special', 
-                    display_format='YYYY-MM-DD', 
-                    date='2016-01-01',
-                    style={'margin-bottom': '10px', 'margin-right': '30px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
-                ),     
-                html.Label("Selecciona una fecha de fin:", style={'margin-right': '10px', 'font-weight': 'bold'}),
-                dcc.DatePickerSingle(
-                    id='end-date-special', 
-                    display_format='YYYY-MM-DD', 
-                    date='2016-12-31',
-                    style={'margin-bottom': '10px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
-                ),
+                html.H3("Grafica de peticiones especiales por día", style={'color': '#007bff', 'fontWeight': 'bold', 'marginBottom': '10px'}),
+                html.Div([
+                    html.Label("Selecciona una fecha de inicio:", style={'margin-right': '10px', 'font-weight': 'bold'}),
+                    dcc.DatePickerSingle(
+                        id='start-date-special', 
+                        display_format='YYYY-MM-DD', 
+                        date='2016-01-01',
+                        style={'margin-bottom': '10px', 'margin-right': '30px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
+                    ),     
+                    html.Label("Selecciona una fecha de fin:", style={'margin-right': '10px', 'font-weight': 'bold'}),
+                    dcc.DatePickerSingle(
+                        id='end-date-special', 
+                        display_format='YYYY-MM-DD', 
+                        date='2016-12-31',
+                        style={'margin-bottom': '10px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
+                    ),
+                ], style={'display': 'flex', 'flexDirection': 'row', 'alignItems': 'center', 'gap': '10px', 'margin-bottom': '10px'}),
                 dcc.Graph(id='special-requests-graph', style={'height': '400px', 'width': '100%', 'margin-top': '20px'}), 
-                html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px'}),
-                html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px'})
+                html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px', 'color': '#555', 'fontStyle': 'italic'}),
+                html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px', 'color': '#555', 'fontStyle': 'italic'})
             ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'margin-top': '15px'} ),
             html.Div([
-                html.H3("Justificación del modelo utilizado"),
-                html.P("Se utilizó un árbol de decisión por su facilidad de interpretación y por permitir visualizar reglas claras para identificar clientes exigentes."),
-                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas."),
-                html.P("También se utilizó un modelo de Regresión Lineal para cuantificar el número de peticiones especiales esperadas en función de las características del cliente."),
-                html.P("Ambos modelos permitirán al hotel anticiparse a las necesidades de los clientes y mejorar la experiencia del cliente."),
+                html.H3("Justificación del modelo utilizado", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
+                html.P("Se utilizó un árbol de decisión por su facilidad de interpretación y por permitir visualizar reglas claras para identificar clientes exigentes.", style={'background': '#f6f8fa', 'padding': '8px', 'borderLeft': '4px solid #007bff', 'marginBottom': '6px'}),
+                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas.", style={'background': '#f6f8fa', 'padding': '8px', 'borderLeft': '4px solid #007bff', 'marginBottom': '6px'}),
+                html.P("También se utilizó un modelo de Regresión Lineal para cuantificar el número de peticiones especiales esperadas en función de las características del cliente.", style={'background': '#f6f8fa', 'padding': '8px', 'borderLeft': '4px solid #007bff', 'marginBottom': '6px'}),
+                html.P("Ambos modelos permitirán al hotel anticiparse a las necesidades de los clientes y mejorar la experiencia del cliente.", style={'background': '#f6f8fa', 'padding': '8px', 'borderLeft': '4px solid #007bff', 'marginBottom': '6px'}),
             ]),
             html.Div([
-                html.H3("Impacto de los clientes exigentes en el negocio"),
-                html.P("Detectar correctamente a los clientes exigentes permite al hotel anticiparse a sus necesidades y mejorar la satisfacción del cliente."),
-                html.P("Un error de tipo falso negativo (no detectar un cliente exigente) puede llevar a una mala experiencia, lo cual impacta en la reputación del hotel, reduce la posibilidad de recomendaciones y afecta el retorno del cliente."),
-                html.P("Es importante maximizar el 'recall' de la clase 'exigente', aunque ello implique tener más falsos positivos.")
+                html.H3("Impacto de los clientes exigentes en el negocio", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
+                html.P("Detectar correctamente a los clientes exigentes permite al hotel anticiparse a sus necesidades y mejorar la satisfacción del cliente.", style={'background': '#fffbe6', 'padding': '8px', 'borderLeft': '4px solid #ffc107', 'marginBottom': '6px'}),
+                html.P("Un error de tipo falso negativo (no detectar un cliente exigente) puede llevar a una mala experiencia, lo cual impacta en la reputación del hotel, reduce la posibilidad de recomendaciones y afecta el retorno del cliente.", style={'background': '#fffbe6', 'padding': '8px', 'borderLeft': '4px solid #ffc107', 'marginBottom': '6px'}),
+                html.P("Es importante maximizar el 'recall' de la clase 'exigente', aunque ello implique tener más falsos positivos.", style={'background': '#fffbe6', 'padding': '8px', 'borderLeft': '4px solid #ffc107', 'marginBottom': '6px'})
             ]),
             html.Div([
-                html.H3("Recomendaciones basadas en los hallazgos"),
+                html.H3("Recomendaciones basadas en los hallazgos", style={'color': '#007bff', 'fontWeight': 'bold', 'marginTop': '10px'}),
                 html.Ul([
-                    html.Li("Ajustar el personal en hoteles con más peticiones especiales."),
-                    html.Li("Asignar personal adicional en fechas con alta cantidad de peticiones especiales."),
-                    html.Li("Aplicar medidas de seguimiento especial a los clientes identificados como potencialmente exigentes."),
-                    html.Li("Ajustar la oferta de servicios y recursos en función de los segmentos de mercado con más peticiones especiales."),
-                ])
+                    html.Li("Ajustar el personal en hoteles con más peticiones especiales.", style={'marginBottom': '6px', 'fontWeight': 'bold', 'color': '#2c3e50'}),
+                    html.Li("Asignar personal adicional en fechas con alta cantidad de peticiones especiales.", style={'marginBottom': '6px', 'fontWeight': 'bold', 'color': '#2c3e50'}),
+                    html.Li("Aplicar medidas de seguimiento especial a los clientes identificados como potencialmente exigentes.", style={'marginBottom': '6px', 'fontWeight': 'bold', 'color': '#2c3e50'}),
+                    html.Li("Ajustar la oferta de servicios y recursos en función de los segmentos de mercado con más peticiones especiales.", style={'marginBottom': '6px', 'fontWeight': 'bold', 'color': '#2c3e50'}),
+                ], style={'paddingLeft': '20px'})
             ])
         ], style={'padding': '20px', 'margin': '20px'})
     
