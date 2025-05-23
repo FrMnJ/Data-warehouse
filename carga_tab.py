@@ -17,7 +17,12 @@ class CargaTab:
         uploaded_files_output = PROCESS_DATASET.get('uploaded_files_output', [])
         
         return html.Div([
-            html.H2("Carga de Datos", style={'margin': '20px'}),  
+            html.H2("Carga de Datos", style={
+                'margin': '20px',
+                'color': '#333',
+                'fontWeight': 'bold',
+                'letterSpacing': '1px'
+            }),  
             
             # Mantenemos el dcc.Store para mantener compatibilidad
             dcc.Store(id='stored-dataframes', data=list(DATAFRAMES.keys()), storage_type='session'),
@@ -25,14 +30,18 @@ class CargaTab:
             html.Button(
                 'Limpiar todo',
                 id='clear-button',
-                style={'margin': '20px',
+                style={
+                        'margin': '20px',
                         'backgroundColor': "#606060",
                         'color': 'white',
                         'border': 'none',
                         'borderRadius': '5px',
-                        'padding': '10px 20px',
+                        'padding': '10px 24px',
                         'cursor': 'pointer',
-                        'fontSize': '14px'}
+                        'fontWeight': 'bold',
+                        'fontSize': '16px',
+                        'boxShadow': '0 2px 5px rgba(0,0,0,0.08)'
+                    }
             ),
             
             dcc.Upload(
@@ -48,7 +57,7 @@ class CargaTab:
                     'borderStyle': 'dashed',
                     'borderRadius': '5px',
                     'textAlign': 'center',
-                    'margin': '30px',
+                    'margin': '30px 20px',
                     'cursor': 'pointer',
                 },
                 multiple=True,
@@ -64,7 +73,7 @@ class CargaTab:
                 ),
                 style={'margin': '30px'}
             ),
-        ])
+        ], style={'maxWidth': '1100px', 'margin': 'auto', 'fontFamily': 'Segoe UI, Arial, sans-serif'})
 
     def describe_table(self, df) -> dict:
         table_info = []
@@ -105,25 +114,84 @@ class CargaTab:
         table_info = self.describe_table(df)
         return html.Div([
             html.Hr(),
-            html.H3(f"Nombre del archivo: {filename}"),
-            html.H4(f"Tipo de archivo: {filename.split('.')[-1]}"),
-            html.H4(f"Número de registros: {len(df)}"),
-            html.H4(f"Número de columnas: {len(df.columns)}"),
-            dash_table.DataTable(table_info, 
-                                 [{"name": i, "id": i} for i in ['column_name',
-                                                                 'type',
-                                                                 'unique_values',
-                                                                 'missing_values',
-                                                                 'percent_missing']],
-                                 style_table={'overflowX': 'auto'},
-                                 page_size=10,),
+            html.Div([
+                html.H3([
+                    html.B("Nombre del archivo: "), 
+                    html.Span(filename, style={'fontWeight': 'normal'})
+                ]),
+                html.H4([
+                    html.B("Tipo de archivo: "), 
+                    html.Span(filename.split('.')[-1], style={'fontWeight': 'normal'})
+                ]),
+                html.H4([
+                    html.B("Número de registros: "), 
+                    html.Span(len(df), style={'fontWeight': 'normal'})
+                ]),
+                html.H4([
+                    html.B("Número de columnas: "), 
+                    html.Span(len(df.columns), style={'fontWeight': 'normal'})
+                ]),
+            ]),
+            html.Div([
+                html.H4("Resumen de columnas", style={'textAlign': 'center', 'marginTop': '20px'}),
+                dash_table.DataTable(
+                    table_info, 
+                    [{"name": i, "id": i} for i in ['column_name', 'type', 'unique_values', 'missing_values', 'percent_missing']],
+                    style_table={'overflowX': 'auto', 'margin': 'auto', 'width': '80%'},
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px'
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f9f9f9'
+                        }
+                    ],
+                    page_size=10,
+                ),
+            ], style={'marginTop': '10px'}),
             html.Hr(),
-            dash_table.DataTable(df.head(10).to_dict('records'), 
-                                 [{"name": i, "id": i} for i in df.columns],
-                                 style_table={'overflowX': 'auto'},
-                                ), 
+            html.Div([
+                html.H4("Primeras 10 filas del archivo", style={'textAlign': 'center', 'marginTop': '20px'}),
+                dash_table.DataTable(
+                    df.head(10).to_dict('records'), 
+                    [{"name": i, "id": i} for i in df.columns],
+                    style_table={'overflowX': 'auto', 'margin': 'auto', 'width': '95%'},
+                    style_cell={
+                        'textAlign': 'center',
+                        'fontFamily': 'Segoe UI, Arial, sans-serif',
+                        'fontSize': '15px',
+                        'padding': '8px'
+                    },
+                    style_header={
+                        'backgroundColor': '#e3e3e3',
+                        'fontWeight': 'bold',
+                        'textAlign': 'center'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#f9f9f9'
+                        }
+                    ],
+                ),
+            ], style={'marginTop': '10px'}),
             html.Hr(),
-        ], style={"margin": "20px",})
+        ], style={
+            "margin": "20px",
+            "backgroundColor": "#f8f9fa",
+            "borderRadius": "10px",
+            "padding": "20px",
+            "boxShadow": "0 2px 8px rgba(0,0,0,0.07)"
+        })
 
     def register_callbacks(self):
         @self.app.callback(
