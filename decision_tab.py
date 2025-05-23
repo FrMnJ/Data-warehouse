@@ -29,15 +29,16 @@ class DecisionTab:
             reserved_room_type_demands = df.groupby('reserved_room_type')['total_of_special_requests'].sum().reset_index()
             assigned_room_type_demands = df.groupby('assigned_room_type')['total_of_special_requests'].sum().reset_index()
             deposit_type_demands = df.groupby('deposit_type')['total_of_special_requests'].sum().reset_index()
-            agent_demands = df.groupby('agent')['total_of_special_requests'].sum().reset_index()
-            company_demands = df.groupby('company')['total_of_special_requests'].sum().reset_index()
             customer_type_demands = df.groupby('customer_type')['total_of_special_requests'].sum().reset_index()
             # Grafica de frecuencia de peticiones especiales por hotel
-            
             return html.Div([
             html.H2("Toma de decisiones",
                     style={'margin': '20px'}),  
             # Grafica de pastel de clientes que hace petciones especiales
+            html.H3("🎯 Objetivo de la Toma de Decisiones"),
+            html.P("Ayudar al hotel a optimizar sus recursos y mejorar la experiencia del cliente, anticipando solicitudes especiales y detectando clientes especiales antes de su llegada."),
+            html.P("Las peticiones especiales son un indicador de las necesidades de los clientes y pueden influir en la satisfacción del cliente."),
+            html.H3("📊 Visualizaciones clave para la toma de decisiones"),
             html.Div([
                 dcc.Graph(
                 id='special-requests-pie-chart',
@@ -244,63 +245,6 @@ class DecisionTab:
                 html.P("Esta gráfica muestra el total de peticiones especiales por tipo de depósito."),
                 html.P("Esta información es útil para identificar qué tipo de depósito tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
             ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
-            # Grafica de peticiones especiales por agente
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-agent-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': agent_demands['agent'],
-                                'y': agent_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por agente',
-                                'marker': {'color': '#e83e8c'}
-                            }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por agente",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Agente'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
-                        }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por agente."),
-                html.P("Esta información es útil para identificar qué agente tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),       
-            html.Div([
-                dcc.Graph(
-                    id='special-requests-company-bar-chart',
-                    figure={
-                        'data': [
-                            {
-                                'x': company_demands['company'],
-                                'y': company_demands['total_of_special_requests'],
-                                'type': 'bar',
-                                'name': 'Peticiones especiales por empresa',
-                                'marker': {'color': '#fd7e14'}
-                            }
-                        ],
-                        'layout': {
-                            'title': {
-                                'text': "Peticiones especiales por empresa",
-                                'font_size': 24
-                            },
-                            'xaxis': {'title': 'Empresa'},
-                            'yaxis': {'title': 'Total de peticiones especiales'},
-                            'height': 400,
-                            'width': 600
-                        }
-                    }
-                ),
-                html.P("Esta gráfica muestra el total de peticiones especiales por empresa."),
-                html.P("Esta información es útil para identificar qué empresa tiene más peticiones especiales y, por lo tanto, podría requerir más atención o recursos."),
-            ], style={'margin-top': '20px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
             # Tipo de cliente
             html.Div([
                 dcc.Graph(
@@ -348,11 +292,13 @@ class DecisionTab:
                 dcc.Graph(id='special-requests-graph', style={'height': '400px', 'width': '100%', 'margin-top': '20px'}), 
                 html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px'}),
                 html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px'})
-            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0'} ),
+            ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start', 'gap': '5px', 'padding': '20px', 'background': '#fafbfc', 'border-radius': '8px', 'box-shadow': '0 2px 8px #e0e0e0', 'margin-top': '15px'} ),
             html.Div([
                 html.H3("Justificación del modelo utilizado"),
                 html.P("Se utilizó un árbol de decisión por su facilidad de interpretación y por permitir visualizar reglas claras para identificar clientes exigentes."),
-                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas.")
+                html.P("Se priorizó una configuración del modelo que reduce la complejidad (poca profundidad y muestras mínimas elevadas) para facilitar la toma de decisiones basada en las reglas generadas."),
+                html.P("También se utilizó un modelo de Regresión Lineal para cuantificar el número de peticiones especiales esperadas en función de las características del cliente."),
+                html.P("Ambos modelos permitirán al hotel anticiparse a las necesidades de los clientes y mejorar la experiencia del cliente."),
             ]),
             html.Div([
                 html.H3("Impacto de los clientes exigentes en el negocio"),
@@ -363,11 +309,13 @@ class DecisionTab:
         html.Div([
             html.H3("Recomendaciones basadas en los hallazgos"),
                 html.Ul([
+                    html.Li("Ajustar el personal en hoteles con más peticiones especiales."),
                     html.Li("Asignar personal adicional en fechas con alta cantidad de peticiones especiales."),
                     html.Li("Aplicar medidas de seguimiento especial a los clientes identificados como potencialmente exigentes."),
+                    html.Li("Ajustar la oferta de servicios y recursos en función de los segmentos de mercado con más peticiones especiales."),
                 ])
             ])
-        ])
+        ], style={'padding': '20px', 'margin': '20px'})
     
     def register_callbacks(self):
         @self.app.callback(
