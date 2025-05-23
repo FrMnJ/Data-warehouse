@@ -4,10 +4,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import plotly.graph_objs as go
-import matplotlib
 from imblearn.over_sampling import SMOTE
-matplotlib.use('Agg')
 import dash_cytoscape as cyto
 
 from info_compartida import DATAFRAMES, PROCESS_DATASET
@@ -22,44 +22,75 @@ class MineriaTab:
         data_mining_output = PROCESS_DATASET.get('data_mining_output', [])
 
         return html.Div([
-            html.H2("Minería de datos",
-                    style={'margin': '20px'}),  
-            html.Button('Ejecutar Minería de datos',
-                         id='run-data-mining', 
-                         n_clicks=0, 
-                         style={'margin': '20px',
-                                'background-color': '#4CAF50',
-                                'color': 'white',
-                                'border': 'none',
-                                'padding': '10px 20px',
-                                'text-align': 'center',
-                                'text-decoration': 'none',
-                                'display': 'inline-block' if not data_mining_output else 'none',
-                                }),
-            html.Button('Limpiar resultados Minería de datos',
-                            id='clear-data-mining-output', 
-                            n_clicks=0, 
-                            style={'margin': '20px',
-                                    'background-color': '#f44336',
-                                    'color': 'white',
-                                    'border': 'none',
-                                    'padding': '10px 20px',
-                                    'text-align': 'center',
-                                    'text-decoration': 'none',
-                                    'display': 'none' if not data_mining_output else 'inline-block',
-                                    }),
+            html.H2("Minería de datos", style={
+                'margin': '20px',
+                'color': '#333',
+                'fontWeight': 'bold',
+                'letterSpacing': '1px'
+            }),
             html.Div([
-                html.H3("Resultados de la minería de datos", 
-                        style={'margin': '20px 0', 'display': 'none' if not data_mining_output else 'block'}),
+                html.Button(
+                    'Ejecutar Minería de datos',
+                    id='run-data-mining',
+                    n_clicks=0,
+                    style={
+                        'margin': '10px 20px 10px 0',
+                        'backgroundColor': '#4CAF50',
+                        'color': 'white',
+                        'border': 'none',
+                        'padding': '10px 24px',
+                        'borderRadius': '6px',
+                        'fontWeight': 'bold',
+                        'fontSize': '16px',
+                        'boxShadow': '0 2px 5px rgba(0,0,0,0.08)',
+                        'display': 'inline-block' if not data_mining_output else 'none',
+                        'transition': 'background 0.3s',
+                        'cursor': 'pointer'
+                    }
+                ),
+                html.Button(
+                    'Limpiar resultados Minería de datos',
+                    id='clear-data-mining-output',
+                    n_clicks=0,
+                    style={
+                        'margin': '10px 0',
+                        'backgroundColor': '#f44336',
+                        'color': 'white',
+                        'border': 'none',
+                        'padding': '10px 24px',
+                        'borderRadius': '6px',
+                        'fontWeight': 'bold',
+                        'fontSize': '16px',
+                        'boxShadow': '0 2px 5px rgba(0,0,0,0.08)',
+                        'display': 'none' if not data_mining_output else 'inline-block',
+                        'transition': 'background 0.3s',
+                        'cursor': 'pointer'
+                    }
+                ),
+            ], style={'margin': '20px 0'}),
+            html.Div([
+                html.H3("Resultados de la minería de datos", style={
+                    'margin': '20px 0 10px 0',
+                    'color': '#222',
+                    'fontWeight': 'bold',
+                    'display': 'none' if not data_mining_output else 'block'
+                }),
                 dcc.Loading(
                     id="loading-data-mining",
                     type="circle",
-                    children=html.Div(id='data-mining-output',
-                                    children=data_mining_output if data_mining_output else [html.P("", style={'margin': '20px'})]),
+                    children=html.Div(
+                        id='data-mining-output',
+                        children=data_mining_output if data_mining_output else [html.P("", style={'margin': '20px'})]
+                    ),
                     style={'margin': '20px'}
                 )
-            ], id='data-mining-results-container'),
-    ])
+            ], id='data-mining-results-container', style={
+                'backgroundColor': '#f5f7fa',
+                'borderRadius': '12px',
+                'padding': '20px',
+                'boxShadow': '0 2px 8px rgba(0,0,0,0.07)'
+            }),
+        ], style={'maxWidth': '1100px', 'margin': 'auto', 'fontFamily': 'Segoe UI, Arial, sans-serif'})
 
 
     def run_decision_tree(self, X_resampled, y_resampled, criterion,
@@ -177,6 +208,42 @@ class MineriaTab:
                 recurse(right, node)
         recurse(0)
         return nodes + edges
+    
+    def run_linear_regression_special_requests(self, df):
+        # Elimina columnas que no deben usarse como predictores
+        drop_cols = [
+            'total_of_special_requests', 'reservation_status_date'
+        ]
+        X = df.drop(columns=[col for col in drop_cols if col in df.columns])
+        y = df['total_of_special_requests']
+
+        # Antes de pd.get_dummies(X)
+        for col in ['agent', 'company']:
+            if col in X.columns:
+                X[col] = X[col].astype(str)
+        # One-hot encoding para variables categóricas
+        X = pd.get_dummies(X)
+
+        # Entrenamiento y prueba
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        model = LinearRegression()
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+
+        # Métricas
+        mse = mean_squared_error(y_test, y_pred)
+        mae = mean_absolute_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+
+        return {
+            'model': model,
+            'X_test': X_test,
+            'y_test': y_test,
+            'y_pred': y_pred,
+            'mse': mse,
+            'mae': mae,
+            'r2': r2
+        }
 
     def register_callbacks(self):
         @self.app.callback(
@@ -236,30 +303,84 @@ class MineriaTab:
             report_df.rename(columns={'index': 'Clase'}, inplace=True)   
 
             element = html.Div([
-                html.H3("Reporte de clasificación", style={'margin': '20px'}),
+                html.H3("📋 Reporte de clasificación", style={'margin': '20px 20px 10px 20px'}),
+
                 dash_table.DataTable(
                     data=report_df.to_dict('records'),
                     columns=[{"name": i, "id": i} for i in report_df.columns],
                     style_table={'overflowX': 'auto'},
+                    style_cell={'padding': '8px', 'textAlign': 'center'},
+                    style_header={
+                        'backgroundColor': '#f0f0f0',
+                        'fontWeight': 'bold'
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': '#fafafa'
+                        }
+                    ],
+                    page_size=10,
                 ),
+
                 html.Div([
-                    html.H4("Explicación de métricas de clasificación"),
-                    html.P("📌 Accuracy (Exactitud): es la proporción de todas las clasificaciones correctas, ya sean positivas o negativas."),
-                    html.P("📌 Precision (Precisión): es la proporción de todas las clasificaciones positivas del modelo que realmente son positivas."),
-                    html.P("📌 Recall (Sensibilidad): mide qué proporción de los casos positivos reales fueron correctamente identificados por el modelo."),
-                    html.P("📌 F1-Score: es la media armónica entre precision y recall. Es útil cuando necesitas un balance entre ambos, especialmente con clases desbalanceadas."),
-                    html.P("📌 Support: es la cantidad de ejemplos reales de cada clase en los datos de prueba."), 
-                    html.P("En nuestro caso, es necesario que el modelo tenga un alto recall para la clase 'Exigente', ya que no identificar correctamente a estos clientes podría afectar negativamente al negocio. A continuación se explican algunas de las consecuencias de cometer falsos negativos:"),
+                    html.H4("📌 Explicación de métricas de clasificación", style={"marginTop": "20px", "marginBottom": "10px"}),
+
+                    html.Div([
+                        html.P([
+                            html.B("🎯 Accuracy (Exactitud): "),
+                            "Proporción de todas las clasificaciones correctas, positivas y negativas."
+                        ]),
+                        html.P([
+                            html.B("✅ Precision (Precisión): "),
+                            "Proporción de las clasificaciones positivas que realmente son positivas."
+                        ]),
+                        html.P([
+                            html.B("🔍 Recall (Sensibilidad): "),
+                            "Porcentaje de casos positivos reales correctamente identificados por el modelo."
+                        ]),
+                        html.P([
+                            html.B("⚖️ F1-Score: "),
+                            "Media armónica entre precisión y recall, útil para balancear ambos, especialmente con clases desbalanceadas."
+                        ]),
+                        html.P([
+                            html.B("📊 Support: "),
+                            "Cantidad de ejemplos reales de cada clase en los datos de prueba."
+                        ]),
+                    ], style={"marginBottom": "15px"}),
+
+                    html.P(
+                        "En nuestro caso, es crucial un alto recall para la clase 'Exigente', "
+                        "ya que no identificar a estos clientes puede afectar negativamente al negocio.",
+                        style={"marginBottom": "10px"}
+                    ),
+
+                    html.P("Algunas consecuencias de falsos negativos:"),
                     html.Ul([
                         html.Li("Malas reseñas o quejas"),
                         html.Li("Insatisfacción del cliente"),
-                        html.Li("Perdida de clientes frecuentes o valiosos"),
+                        html.Li("Pérdida de clientes frecuentes o valiosos"),
                         html.Li("Daño a la reputación de la empresa"),
-                    ]),
-                    html.P("Preferimos que el modelo clasifique como Exigente a un cliente que no lo es (falso positivo) antes que clasificar como No Exigente a un cliente que sí lo es (falso negativo). Esto se debe a que los falsos positivos pueden ser manejados con atención al cliente, mientras que los falsos negativos pueden llevar a consecuencias más graves."),
-                ])
-            ])
+                    ], style={"marginBottom": "15px"}),
+
+                    html.P(
+                        "Preferimos que el modelo clasifique como 'Exigente' a un cliente que no lo es (falso positivo) "
+                        "antes que dejar pasar un cliente 'Exigente' (falso negativo), "
+                        "porque los falsos positivos se pueden manejar con atención personalizada, "
+                        "mientras que los falsos negativos pueden causar mayores problemas.",
+                        style={"fontStyle": "italic"}
+                    ),
+
+                ], style={
+                    'backgroundColor': '#f9f9f9',
+                    'padding': '15px',
+                    'borderRadius': '10px',
+                    'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'
+                }),
+
+            ], style={'margin': '20px'})
             children.append(element)
+
             
             # Mostrar el arbol de decisión
             # --- Interactive Cytoscape Tree ---
@@ -276,7 +397,7 @@ class MineriaTab:
                     id='cytoscape-decision-tree',
                     elements=cyto_elements,
                     layout={'name': 'breadthfirst', 'directed': True, 'padding': 10, 'spacingFactor': 2},
-                    style={'width': '100%', 'height': '700px', 'background': '#f9f9f9'},
+                    style={'width': '80%', 'height': '500px', 'background': '#f9f9f9'},
                     stylesheet=[
                         {'selector': 'node', 'style': {'label': 'data(label)', 'font-size': '16px', 'text-wrap': 'wrap', 'text-max-width': 120}},
                         {'selector': '.leaf', 'style': {'background-color': '#4CAF50'}},
@@ -285,6 +406,99 @@ class MineriaTab:
                     ]
                 )
             )
+
+            regression_result = self.run_linear_regression_special_requests(processed_df)
+            children.append(
+                html.H3("Regresión lineal: Predicción de solicitudes especiales (total_of_special_requests)", style={'margin': '20px'})
+            )
+            children.append(
+                html.Div([
+                    html.H4("📊 Métricas de rendimiento del modelo", style={"marginBottom": "0px"}),
+
+                    html.Div([
+                        html.P([
+                            html.B("🔹 MSE (Mean Squared Error): "),
+                            f"{regression_result['mse']:.2f}"
+                        ]),
+                        html.P(
+                            "Es el promedio de los cuadrados de las diferencias entre los valores reales y los valores predichos. "
+                            "Mientras más bajo sea, mejor. Un valor de 0 indica predicción perfecta."
+                        )
+                    ], style={"marginBottom": "20px"}),
+
+                    html.Hr(),
+
+                    html.Div([
+                        html.P([
+                            html.B("🔸 MAE (Mean Absolute Error): "),
+                            f"{regression_result['mae']:.2f}"
+                        ]),
+                        html.P(
+                            "Promedio de las diferencias absolutas entre los valores reales y los predichos. "
+                            "Debe ser lo más bajo posible."
+                        )
+                    ], style={"marginBottom": "20px"}),
+
+                    html.Hr(),
+
+                    html.Div([
+                        html.P([
+                            html.B("🟢 R² (Coeficiente de determinación): "),
+                            f"{regression_result['r2']:.2f}"
+                        ]),
+                        html.P(
+                            "Indica qué tanto del comportamiento de lo que queremos predecir logra explicar el modelo. "
+                            "Un valor de 1 es perfecto, y valores negativos indican que el modelo es peor que predecir el promedio."
+                        )
+                    ]),
+
+                    dcc.Graph(
+                        figure=go.Figure(
+                            data=[
+                                go.Scatter(
+                                    x=regression_result['y_test'],
+                                    y=regression_result['y_pred'],
+                                    mode='markers',
+                                    name='Predicción',
+                                    marker=dict(size=8, color='blue', opacity=0.7),
+                                    hovertemplate=(
+                                        'Valor real: %{x}<br>'+
+                                        'Valor predicho: %{y}<br>'+
+                                        'Índice: %{customdata}'
+                                    ),
+                                    customdata=regression_result['y_test'].index
+                                ),
+                                go.Scatter(
+                                    x=regression_result['y_test'],
+                                    y=regression_result['y_test'],
+                                    mode='lines',
+                                    name='Ideal',
+                                    line=dict(color='red')
+                                )
+                            ],
+                            layout=go.Layout(
+                                title='Regresión lineal: Real vs Predicho',
+                                xaxis_title='Real',
+                                yaxis_title='Predicho'
+                            )
+                        )
+                    ),
+
+                    html.P(
+                        "* Estimar el número de solicitudes especiales que un cliente hará puede ayudar a la empresa a anticipar "
+                        "y satisfacer mejor las necesidades del cliente, mejorando así la experiencia del cliente y aumentando la satisfacción.",
+                        style={"marginTop": "20px", "fontStyle": "italic"}
+                    ),
+
+                ], style={
+                    'margin': '20px',
+                    'backgroundColor': '#f9f9f9',
+                    'padding': '15px',
+                    'borderRadius': '10px',
+                    'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'
+                })
+            )
+
 
             run_style['display'] = 'none'
             clear_style['display'] = 'inline-block'
