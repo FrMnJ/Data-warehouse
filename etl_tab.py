@@ -249,8 +249,9 @@ class ETLTab:
             # html.Hr(style={'margin': '30px 20px', 'borderTop': '1px solid #eee'}),
             
             # Indicador de carga y resultados del ETL - mostrar resultados almacenados si existen
+
             html.Div([
-                html.H3("Resultados del proceso ETL", 
+                html.H2("Resultados del proceso ETL", 
                         style={'margin': '20px 0', 'display': 'none' if not etl_output else 'block'}),
                 dcc.Loading(
                     id="loading-etl",
@@ -260,6 +261,7 @@ class ETLTab:
                     style={'margin': '20px'}
                 )
             ], id='etl-results-container'),
+            
         ], style={'maxWidth': '1100px', 'margin': 'auto','height': 'auto', 'fontFamily': 'Segoe UI, Arial, sans-serif'})
 
     def register_callbacks(self):
