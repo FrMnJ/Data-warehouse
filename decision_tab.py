@@ -288,20 +288,22 @@ class DecisionTab:
             # Full-width: Graph by day
             html.Div([
                 html.H3("Grafica de peticiones especiales por día"),
-                html.Label("Selecciona una fecha de inicio:", style={'margin-right': '10px', 'font-weight': 'bold'}),
-                dcc.DatePickerSingle(
-                    id='start-date-special', 
-                    display_format='YYYY-MM-DD', 
-                    date='2016-01-01',
-                    style={'margin-bottom': '10px', 'margin-right': '30px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
-                ),     
-                html.Label("Selecciona una fecha de fin:", style={'margin-right': '10px', 'font-weight': 'bold'}),
-                dcc.DatePickerSingle(
-                    id='end-date-special', 
-                    display_format='YYYY-MM-DD', 
-                    date='2016-12-31',
-                    style={'margin-bottom': '10px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
-                ),
+                html.Div([
+                    html.Label("Selecciona una fecha de inicio:", style={'margin-right': '10px', 'font-weight': 'bold'}),
+                    dcc.DatePickerSingle(
+                        id='start-date-special', 
+                        display_format='YYYY-MM-DD', 
+                        date='2016-01-01',
+                        style={'margin-bottom': '10px', 'margin-right': '30px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
+                    ),     
+                    html.Label("Selecciona una fecha de fin:", style={'margin-right': '10px', 'font-weight': 'bold'}),
+                    dcc.DatePickerSingle(
+                        id='end-date-special', 
+                        display_format='YYYY-MM-DD', 
+                        date='2016-12-31',
+                        style={'margin-bottom': '10px', 'background': '#f0f0f0', 'border-radius': '5px', 'padding': '5px'}
+                    ),
+                ], style={'display': 'flex', 'flexDirection': 'row', 'alignItems': 'center', 'gap': '10px', 'margin-bottom': '10px'}),
                 dcc.Graph(id='special-requests-graph', style={'height': '400px', 'width': '100%', 'margin-top': '20px'}), 
                 html.P("Esta gráfica muestra el total de peticiones especiales por día en el rango de fechas seleccionado.", style={'margin-top': '10px'}),
                 html.P("Esta información es útil para identificar patrones y tendencias en las peticiones especiales a lo largo del tiempo.", style={'margin-top': '10px'})
